@@ -57,7 +57,7 @@ Todos os endpoints que retornam um usuário incluem o campo `roles`:
   "id": 1,
   "email": "usuario@email.com",
   "name": "Nome do Usuário",
-  "roles": ["ADMIN", "PREMIUM"]
+  "roles": ["ADMIN"]
 }
 ```
 ### Login — `POST /users/login`
@@ -95,8 +95,8 @@ Todos os endpoints que retornam um usuário incluem o campo `roles`:
 ### Criar role — `POST /roles`
 ```json
 {
-  "name": "PREMIUM",
-  "description": "Usuário premium"
+  "name": "MODERATOR",
+  "description": "Moderador de conteúdo"
 }
 ```
 ---
@@ -208,7 +208,6 @@ Ao subir a aplicação, são criados automaticamente:
 |---|---|
 | Role | `USER` |
 | Role | `ADMIN` |
-| Role | `PREMIUM` |
 | Usuário admin | `admin@authserver.com` / `admin` |
 > ⚠️ **Atenção:** altere as credenciais padrão antes de usar em produção.
 > 💡 Todo novo usuário criado via `POST /users` recebe automaticamente a role `USER`.
