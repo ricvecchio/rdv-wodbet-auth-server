@@ -1,6 +1,7 @@
-package br.pucpr.authserver.events
+package br.pucpr.authserver.events.entities
 
-import br.pucpr.authserver.participants.Participant
+import br.pucpr.authserver.events.enums.EventStatus
+import br.pucpr.authserver.participants.entities.Participant
 import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
@@ -39,4 +40,3 @@ class Event(
     @Column(nullable = false)
     var updatedAt: LocalDateTime? = null
 )
-

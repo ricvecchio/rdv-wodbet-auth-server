@@ -1,5 +1,7 @@
-package br.pucpr.authserver.events
+package br.pucpr.authserver.events.repositories
 
+import br.pucpr.authserver.events.entities.Event
+import br.pucpr.authserver.events.enums.EventStatus
 import org.springframework.data.domain.Sort
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -28,4 +30,3 @@ interface EventRepository : JpaRepository<Event, Long> {
         sort: Sort
     ): List<Event>
 }
-

@@ -1,6 +1,6 @@
-package br.pucpr.authserver.events.requests
+package br.pucpr.authserver.events.dtos.requests
 
-import br.pucpr.authserver.events.EventStatus
+import br.pucpr.authserver.events.enums.EventStatus
 import java.time.LocalDateTime
 
 data class UpdateEventRequest(
@@ -10,4 +10,3 @@ data class UpdateEventRequest(
     val eventDate: LocalDateTime? = null,
     val status: EventStatus? = null
 )
-

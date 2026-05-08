@@ -1,11 +1,15 @@
-package br.pucpr.authserver.events
+package br.pucpr.authserver.events.services
 
-import br.pucpr.authserver.events.requests.UpdateEventRequest
-import br.pucpr.authserver.participants.Participant
-import br.pucpr.authserver.participants.ParticipantAlreadyLinkedException
-import br.pucpr.authserver.participants.ParticipantNotFoundException
-import br.pucpr.authserver.participants.ParticipantNotLinkedException
-import br.pucpr.authserver.participants.ParticipantRepository
+import br.pucpr.authserver.events.dtos.requests.UpdateEventRequest
+import br.pucpr.authserver.events.entities.Event
+import br.pucpr.authserver.events.enums.EventStatus
+import br.pucpr.authserver.events.exceptions.EventNotFoundException
+import br.pucpr.authserver.events.repositories.EventRepository
+import br.pucpr.authserver.participants.entities.Participant
+import br.pucpr.authserver.participants.exceptions.ParticipantAlreadyLinkedException
+import br.pucpr.authserver.participants.exceptions.ParticipantNotFoundException
+import br.pucpr.authserver.participants.exceptions.ParticipantNotLinkedException
+import br.pucpr.authserver.participants.repositories.ParticipantRepository
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
@@ -18,7 +22,6 @@ class EventService(
     private val eventRepository: EventRepository,
     private val participantRepository: ParticipantRepository
 ) {
-
     companion object {
         private val log = LoggerFactory.getLogger(EventService::class.java)
     }
@@ -46,57 +49,37 @@ class EventService(
             "createdat" -> "createdAt"
             else -> "eventDate"
         }
-        val sort = if (direction.uppercase() == "DESC")
-            Sort.by(sortField).descending()
-        else
-            Sort.by(sortField).ascending()
-
+        val sort = if (direction.uppercase() == "DESC") Sort.by(sortField).descending()
+        else Sort.by(sortField).ascending()
         return eventRepository.findWithFilters(name, status, location, startDate, endDate, sort)
     }
 
     @Transactional(readOnly = true)
-    fun findById(id: Long): Event {
-        return eventRepository.findByIdOrNull(id)
-            ?: run {
-                log.warn("Event not found: id={}", id)
-                throw EventNotFoundException(id)
-            }
-    }
+    fun findById(id: Long): Event =
+        eventRepository.findByIdOrNull(id) ?: run {
+            log.warn("Event not found: id={}", id)
+            throw EventNotFoundException(id)
+        }
 
     @Transactional
     fun update(id: Long, request: UpdateEventRequest): Event {
         val event = findById(id)
         var changed = false
-
-        request.name?.let {
-            if (event.name != it) { event.name = it; changed = true }
-        }
-        request.description?.let {
-            if (event.description != it) { event.description = it; changed = true }
-        }
-        request.location?.let {
-            if (event.location != it) { event.location = it; changed = true }
-        }
-        request.eventDate?.let {
-            if (event.eventDate != it) { event.eventDate = it; changed = true }
-        }
-        request.status?.let {
-            if (event.status != it) { event.status = it; changed = true }
-        }
-
+        request.name?.let { if (event.name != it) { event.name = it; changed = true } }
+        request.description?.let { if (event.description != it) { event.description = it; changed = true } }
+        request.location?.let { if (event.location != it) { event.location = it; changed = true } }
+        request.eventDate?.let { if (event.eventDate != it) { event.eventDate = it; changed = true } }
+        request.status?.let { if (event.status != it) { event.status = it; changed = true } }
         return if (changed) {
             val updated = eventRepository.save(event)
             log.info("Event updated: id=${updated.id}, name=${updated.name}")
             updated
-        } else {
-            event
-        }
+        } else event
     }
 
     @Transactional
     fun delete(id: Long) {
-        val event = findById(id)
-        eventRepository.delete(event)
+        eventRepository.delete(findById(id))
         log.info("Event deleted: id={}", id)
     }
 
@@ -108,11 +91,7 @@ class EventService(
                 log.warn("Participant not found while linking: participantId={}", participantId)
                 throw ParticipantNotFoundException(participantId)
             }
-
-        if (participant.event?.id == eventId) {
-            throw ParticipantAlreadyLinkedException(participantId, eventId)
-        }
-
+        if (participant.event?.id == eventId) throw ParticipantAlreadyLinkedException(participantId, eventId)
         participant.event = event
         participantRepository.save(participant)
         log.info("Participant {} linked to event {}", participantId, eventId)
@@ -121,17 +100,13 @@ class EventService(
 
     @Transactional
     fun removeParticipant(eventId: Long, participantId: Long) {
-        val event = findById(eventId)
+        findById(eventId)
         val participant = participantRepository.findByIdOrNull(participantId)
             ?: run {
                 log.warn("Participant not found while unlinking: participantId={}", participantId)
                 throw ParticipantNotFoundException(participantId)
             }
-
-        if (participant.event?.id != eventId) {
-            throw ParticipantNotLinkedException(participantId, eventId)
-        }
-
+        if (participant.event?.id != eventId) throw ParticipantNotLinkedException(participantId, eventId)
         participant.event = null
         participantRepository.save(participant)
         log.info("Participant {} removed from event {}", participantId, eventId)
@@ -139,8 +114,7 @@ class EventService(
 
     @Transactional(readOnly = true)
     fun listParticipants(eventId: Long): List<Participant> {
-        findById(eventId) // validates event exists
+        findById(eventId)
         return participantRepository.findByEventId(eventId)
     }
 }
-

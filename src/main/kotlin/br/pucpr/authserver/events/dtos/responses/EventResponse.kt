@@ -1,8 +1,8 @@
-package br.pucpr.authserver.events.responses
+package br.pucpr.authserver.events.dtos.responses
 
-import br.pucpr.authserver.events.Event
-import br.pucpr.authserver.events.EventStatus
-import br.pucpr.authserver.participants.responses.ParticipantResponse
+import br.pucpr.authserver.events.entities.Event
+import br.pucpr.authserver.events.enums.EventStatus
+import br.pucpr.authserver.participants.dtos.responses.ParticipantResponse
 import java.time.LocalDateTime
 
 data class EventResponse(
@@ -28,4 +28,3 @@ data class EventResponse(
         updatedAt = event.updatedAt
     )
 }
-

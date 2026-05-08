@@ -1,6 +1,6 @@
-package br.pucpr.authserver.participants.responses
+package br.pucpr.authserver.participants.dtos.responses
 
-import br.pucpr.authserver.participants.Participant
+import br.pucpr.authserver.participants.entities.Participant
 import java.time.LocalDateTime
 
 data class ParticipantResponse(
@@ -24,4 +24,3 @@ data class ParticipantResponse(
         updatedAt = participant.updatedAt
     )
 }
-

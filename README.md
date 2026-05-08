@@ -231,26 +231,43 @@ src/main/kotlin/br/pucpr/authserver/
 │   ├── requests/                     # DTOs de entrada
 │   └── responses/                    # DTOs de saída
 ├── events/
-│   ├── Event.kt                      # Entidade Event — tabela `events` (1:N com Participant)
-│   ├── EventController.kt            # Endpoints /events e /events/{id}/participants
-│   ├── EventRepository.kt            # Repositório JPA com query de filtros dinâmicos
-│   ├── EventService.kt               # Regras de negócio com logs
-│   ├── EventStatus.kt                # Enum: SCHEDULED, CANCELLED, FINISHED
-│   ├── EventNotFoundException.kt     # Exceção 404 customizada
-│   ├── requests/CreateEventRequest.kt
-│   ├── requests/UpdateEventRequest.kt
-│   └── responses/EventResponse.kt
+│   ├── controllers/
+│   │   └── EventController.kt        # Endpoints /events e /events/{id}/participants
+│   ├── dtos/
+│   │   ├── requests/
+│   │   │   ├── CreateEventRequest.kt
+│   │   │   └── UpdateEventRequest.kt
+│   │   └── responses/
+│   │       └── EventResponse.kt
+│   ├── entities/
+│   │   └── Event.kt                  # Entidade Event — tabela `events` (1:N com Participant)
+│   ├── enums/
+│   │   └── EventStatus.kt            # Enum: SCHEDULED, CANCELLED, FINISHED
+│   ├── exceptions/
+│   │   └── EventNotFoundException.kt # Exceção 404 customizada
+│   ├── repositories/
+│   │   └── EventRepository.kt        # Repositório JPA com query de filtros dinâmicos
+│   └── services/
+│       └── EventService.kt           # Regras de negócio com logs
 └── participants/
-    ├── Participant.kt                          # Entidade Participant — tabela `participants` (N:1 com Event)
-    ├── ParticipantController.kt               # Endpoints /participants
-    ├── ParticipantRepository.kt               # Repositório JPA
-    ├── ParticipantService.kt                  # Regras de negócio com logs
-    ├── ParticipantNotFoundException.kt        # Exceção 404 customizada
-    ├── ParticipantAlreadyLinkedException.kt   # Exceção 409 customizada
-    ├── ParticipantNotLinkedException.kt       # Exceção 400 customizada
-    ├── requests/CreateParticipantRequest.kt
-    ├── requests/UpdateParticipantRequest.kt
-    └── responses/ParticipantResponse.kt
+    ├── controllers/
+    │   └── ParticipantController.kt  # Endpoints /participants
+    ├── dtos/
+    │   ├── requests/
+    │   │   ├── CreateParticipantRequest.kt
+    │   │   └── UpdateParticipantRequest.kt
+    │   └── responses/
+    │       └── ParticipantResponse.kt
+    ├── entities/
+    │   └── Participant.kt            # Entidade Participant — tabela `participants` (N:1 com Event)
+    ├── exceptions/
+    │   ├── ParticipantNotFoundException.kt       # Exceção 404 customizada
+    │   ├── ParticipantAlreadyLinkedException.kt  # Exceção 409 customizada
+    │   └── ParticipantNotLinkedException.kt      # Exceção 400 customizada
+    ├── repositories/
+    │   └── ParticipantRepository.kt  # Repositório JPA
+    └── services/
+        └── ParticipantService.kt     # Regras de negócio com logs
 ```
 ---
 ## ⚙️ Configuração (`application.yaml`)
