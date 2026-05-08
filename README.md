@@ -86,6 +86,8 @@ A API utiliza **JWT Bearer Token**. Para acessar endpoints protegidos:
 ```
 ---
 ## 📅 Endpoints — Eventos (`/api/events`)
+
+> Tabela no banco: `events`
 | Método | Endpoint | Descrição | Acesso |
 |---|---|---|---|
 | `POST` | `/events` | Cria novo evento | Autenticado |
@@ -138,9 +140,13 @@ Todos os campos são opcionais:
 ```
 ---
 ## 👥 Endpoints — Participantes (`/api/participants`)
+
+> Tabela no banco: `participants`
 | Método | Endpoint | Descrição | Acesso |
 |---|---|---|---|
 | `POST` | `/participants` | Cria novo participante | Autenticado |
+| `GET` | `/participants` | Lista todos os participantes | Público |
+| `GET` | `/participants?sortDir=ASC\|DESC` | Lista participantes ordenados por nome | Público |
 | `GET` | `/participants/{id}` | Busca participante por ID | Público |
 | `PATCH` | `/participants/{id}` | Atualiza dados do participante | Autenticado |
 | `DELETE` | `/participants/{id}` | Remove participante | ADMIN |
@@ -225,7 +231,7 @@ src/main/kotlin/br/pucpr/authserver/
 │   ├── requests/                     # DTOs de entrada
 │   └── responses/                    # DTOs de saída
 ├── events/
-│   ├── Event.kt                      # Entidade Event (1:N com Participant)
+│   ├── Event.kt                      # Entidade Event — tabela `events` (1:N com Participant)
 │   ├── EventController.kt            # Endpoints /events e /events/{id}/participants
 │   ├── EventRepository.kt            # Repositório JPA com query de filtros dinâmicos
 │   ├── EventService.kt               # Regras de negócio com logs
@@ -235,7 +241,7 @@ src/main/kotlin/br/pucpr/authserver/
 │   ├── requests/UpdateEventRequest.kt
 │   └── responses/EventResponse.kt
 └── participants/
-    ├── Participant.kt                          # Entidade Participant (N:1 com Event)
+    ├── Participant.kt                          # Entidade Participant — tabela `participants` (N:1 com Event)
     ├── ParticipantController.kt               # Endpoints /participants
     ├── ParticipantRepository.kt               # Repositório JPA
     ├── ParticipantService.kt                  # Regras de negócio com logs

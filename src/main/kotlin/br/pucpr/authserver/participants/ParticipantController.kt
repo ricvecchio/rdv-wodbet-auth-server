@@ -24,6 +24,14 @@ class ParticipantController(private val service: ParticipantService) {
             .let { ParticipantResponse(it) }
             .let { ResponseEntity.status(HttpStatus.CREATED).body(it) }
 
+    @GetMapping
+    fun list(
+        @RequestParam(defaultValue = "ASC") sortDir: String
+    ): ResponseEntity<List<ParticipantResponse>> =
+        service.findAll(sortDir)
+            .map { ParticipantResponse(it) }
+            .let { ResponseEntity.ok(it) }
+
     @GetMapping("/{id}")
     fun getById(@PathVariable id: Long): ResponseEntity<ParticipantResponse> =
         service.findById(id)

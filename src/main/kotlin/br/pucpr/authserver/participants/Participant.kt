@@ -7,7 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "Participant")
+@Table(name = "participants")
 class Participant(
     @Id @GeneratedValue
     var id: Long? = null,

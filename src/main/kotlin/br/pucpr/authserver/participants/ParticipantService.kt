@@ -3,6 +3,7 @@ package br.pucpr.authserver.participants
 import br.pucpr.authserver.exceptions.BadRequestException
 import br.pucpr.authserver.participants.requests.UpdateParticipantRequest
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -24,6 +25,15 @@ class ParticipantService(
         val saved = repository.save(participant)
         log.info("Participant created: id=${saved.id}, email=${saved.email}")
         return saved
+    }
+
+    @Transactional(readOnly = true)
+    fun findAll(sortDir: String = "ASC"): List<Participant> {
+        val sort = if (sortDir.uppercase() == "DESC")
+            Sort.by("name").descending()
+        else
+            Sort.by("name").ascending()
+        return repository.findAll(sort)
     }
 
     @Transactional(readOnly = true)
