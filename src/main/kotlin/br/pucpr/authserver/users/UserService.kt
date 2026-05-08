@@ -22,6 +22,9 @@ class UserService(
         if (repository.findByEmail(user.email) != null) {
             throw BadRequestException("User already exists")
         }
+        val userRole = roleRepository.findByName("USER")
+            ?: throw BadRequestException("Role USER not found")
+        user.roles.add(userRole)
         return repository.save(user)
     }
 

@@ -206,10 +206,12 @@ Todos os campos são opcionais:
 Ao subir a aplicação, são criados automaticamente:
 | Recurso | Valor padrão |
 |---|---|
+| Role | `USER` |
 | Role | `ADMIN` |
 | Role | `PREMIUM` |
 | Usuário admin | `admin@authserver.com` / `admin` |
 > ⚠️ **Atenção:** altere as credenciais padrão antes de usar em produção.
+> 💡 Todo novo usuário criado via `POST /users` recebe automaticamente a role `USER`.
 ---
 ## 🔒 Regras de Segurança
 - Sessão **stateless** (sem cookies/sessão no servidor).
