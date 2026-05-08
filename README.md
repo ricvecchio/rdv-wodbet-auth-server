@@ -50,6 +50,16 @@ A API utiliza **JWT Bearer Token**. Para acessar endpoints protegidos:
   "name": "Nome do Usuário"
 }
 ```
+### Resposta de usuário
+Todos os endpoints que retornam um usuário incluem o campo `roles`:
+```json
+{
+  "id": 1,
+  "email": "usuario@email.com",
+  "name": "Nome do Usuário",
+  "roles": ["ADMIN", "PREMIUM"]
+}
+```
 ### Login — `POST /users/login`
 ```json
 {
@@ -61,7 +71,12 @@ A API utiliza **JWT Bearer Token**. Para acessar endpoints protegidos:
 ```json
 {
   "token": "<jwt>",
-  "user": { "id": 1, "name": "Nome do Usuário", "email": "usuario@email.com" }
+  "user": {
+    "id": 1,
+    "email": "usuario@email.com",
+    "name": "Nome do Usuário",
+    "roles": ["ADMIN"]
+  }
 }
 ```
 ### Atualizar nome — `PATCH /users/{id}`
