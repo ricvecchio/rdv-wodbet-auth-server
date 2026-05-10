@@ -226,26 +226,44 @@ src/main/kotlin/br/pucpr/authserver/
 ├── AuthserverApplication.kt          # Entry point
 ├── Bootstrapper.kt                   # Dados iniciais (roles e admin padrão)
 ├── exceptions/                       # Exceções globais (400, 401, 403, 404)
-├── roles/
-│   ├── Role.kt                       # Entidade Role
-│   ├── RoleController.kt             # Endpoints /roles
-│   ├── RoleRepository.kt             # Repositório JPA
-│   ├── RoleService.kt                # Regras de negócio de roles
-│   ├── requests/CreateRoleRequest.kt
-│   └── responses/RoleResponse.kt
 ├── security/
-│   ├── JWT.kt                        # Geração e validação de tokens JWT
+│   ├── Jwt.kt                        # Geração e validação de tokens JWT
 │   ├── JwtTokenFilter.kt             # Filtro de autenticação via JWT
 │   ├── SecurityConfig.kt             # Configuração do Spring Security
 │   └── UserToken.kt                  # Representação do usuário no token
+├── roles/
+│   ├── controllers/
+│   │   └── RoleController.kt         # Endpoints /roles
+│   ├── dtos/
+│   │   ├── requests/
+│   │   │   └── CreateRoleRequest.kt
+│   │   └── responses/
+│   │       └── RoleResponse.kt
+│   ├── entities/
+│   │   └── Role.kt                   # Entidade Role
+│   ├── repositories/
+│   │   └── RoleRepository.kt         # Repositório JPA
+│   └── services/
+│       └── RoleService.kt            # Regras de negócio de roles
 ├── users/
-│   ├── User.kt                       # Entidade User
-│   ├── UserController.kt             # Endpoints /users
-│   ├── UserRepository.kt             # Repositório JPA
-│   ├── UserService.kt                # Regras de negócio de usuários
-│   ├── SortDir.kt                    # Enum de direção de ordenação
-│   ├── requests/                     # DTOs de entrada
-│   └── responses/                    # DTOs de saída
+│   ├── controllers/
+│   │   └── UserController.kt         # Endpoints /users
+│   ├── dtos/
+│   │   ├── requests/
+│   │   │   ├── CreateUserRequest.kt
+│   │   │   ├── LoginRequest.kt
+│   │   │   └── UpdateUserRequest.kt
+│   │   └── responses/
+│   │       ├── LoginResponse.kt
+│   │       └── UserResponse.kt
+│   ├── entities/
+│   │   └── User.kt                   # Entidade User
+│   ├── enums/
+│   │   └── SortDir.kt                # Enum de direção de ordenação (ASC/DESC)
+│   ├── repositories/
+│   │   └── UserRepository.kt         # Repositório JPA
+│   └── services/
+│       └── UserService.kt            # Regras de negócio de usuários
 ├── events/
 │   ├── controllers/
 │   │   └── EventController.kt        # Endpoints /events e /events/{id}/participants

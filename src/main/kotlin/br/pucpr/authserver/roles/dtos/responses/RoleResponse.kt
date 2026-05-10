@@ -1,6 +1,6 @@
-package br.pucpr.authserver.roles.responses
+package br.pucpr.authserver.roles.dtos.responses
 
-import br.pucpr.authserver.roles.Role
+import br.pucpr.authserver.roles.entities.Role
 
 data class RoleResponse(
     val name: String,

@@ -1,5 +1,6 @@
-package br.pucpr.authserver.roles
+package br.pucpr.authserver.roles.repositories
 
+import br.pucpr.authserver.roles.entities.Role
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 

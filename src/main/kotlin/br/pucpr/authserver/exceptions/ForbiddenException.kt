@@ -1,4 +1,4 @@
-package br.pucpr.authserver.exception
+package br.pucpr.authserver.exceptions
 
 import org.springframework.http.HttpStatus.FORBIDDEN
 import org.springframework.web.bind.annotation.ResponseStatus

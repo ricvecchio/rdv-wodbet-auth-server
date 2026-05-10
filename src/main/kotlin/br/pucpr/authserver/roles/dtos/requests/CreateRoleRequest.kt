@@ -1,6 +1,6 @@
-package br.pucpr.authserver.roles.requests
+package br.pucpr.authserver.roles.dtos.requests
 
-import br.pucpr.authserver.roles.Role
+import br.pucpr.authserver.roles.entities.Role
 import jakarta.validation.constraints.NotBlank
 
 data class CreateRoleRequest(

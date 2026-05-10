@@ -1,6 +1,6 @@
 package br.pucpr.authserver.security
 
-import br.pucpr.authserver.users.User
+import br.pucpr.authserver.users.entities.User
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.jackson.io.JacksonDeserializer
 import io.jsonwebtoken.jackson.io.JacksonSerializer

@@ -1,5 +1,6 @@
-package br.pucpr.authserver.users
+package br.pucpr.authserver.users.repositories
 
+import br.pucpr.authserver.users.entities.User
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository

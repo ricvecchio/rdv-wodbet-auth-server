@@ -1,6 +1,6 @@
-package br.pucpr.authserver.users.responses
+package br.pucpr.authserver.users.dtos.responses
 
-import br.pucpr.authserver.users.User
+import br.pucpr.authserver.users.entities.User
 
 data class UserResponse(
     val id: Long,

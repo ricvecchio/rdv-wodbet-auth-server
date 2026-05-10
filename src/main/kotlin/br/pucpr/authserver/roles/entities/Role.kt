@@ -1,4 +1,4 @@
-package br.pucpr.authserver.roles
+package br.pucpr.authserver.roles.entities
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity

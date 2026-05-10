@@ -1,6 +1,8 @@
-package br.pucpr.authserver.roles
+package br.pucpr.authserver.roles.services
 
 import br.pucpr.authserver.exceptions.BadRequestException
+import br.pucpr.authserver.roles.entities.Role
+import br.pucpr.authserver.roles.repositories.RoleRepository
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 

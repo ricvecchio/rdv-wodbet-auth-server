@@ -1,11 +1,11 @@
-package br.pucpr.authserver.users
+package br.pucpr.authserver.users.entities
 
-import br.pucpr.authserver.roles.Role
+import br.pucpr.authserver.roles.entities.Role
 import jakarta.persistence.*
 
 @Entity
 @Table(name = "UserTable")
-class User (
+class User(
     @Id @GeneratedValue
     var id: Long? = null,
 
