@@ -1,5 +1,11 @@
 # Spring Auth Server
 Servidor de autenticação e autorização baseado em **JWT**, desenvolvido com **Kotlin + Spring Boot**. Permite gerenciar usuários, perfis de acesso, eventos e participantes.
+
+
+> **Autor:** Ricardo Del Vecchio   
+> **Repositório:** https://github.com/ricvecchio/spring-auth-server   
+> **Apresentação Youtube:** [https://youtu.be/JZKoe0lHUAc](https://youtu.be/JZKoe0lHUAc)
+
 ---
 ## 🛠️ Tecnologias
 | Tecnologia | Versão |
@@ -18,13 +24,14 @@ Servidor de autenticação e autorização baseado em **JWT**, desenvolvido com 
 ./gradlew bootRun
 ```
 A aplicação sobe em `http://localhost:8080/api`.
-> **Swagger UI:** `http://localhost:8080/api`
+> **Swagger UI:** `http://localhost:8080/api`  
 > **H2 Console:** `http://localhost:8080/api/h2-console` (usuário: `sa`, senha: `sa`)
 ---
 ## 🔐 Autenticação
 A API utiliza **JWT Bearer Token**. Para acessar endpoints protegidos:
 1. Faça login em `POST /api/users/login`
-2. Use o token retornado no header: `Authorization: Bearer <token>`
+2. Use o token retornado no header: `Authorization: Bearer <token>`  
+
 | Perfil | Expiração do token |
 |---|---|
 | Usuário comum | 48 horas |
@@ -86,12 +93,14 @@ Todos os endpoints que retornam um usuário incluem o campo `roles`:
 }
 ```
 ---
-## 🏷️ Endpoints — Roles (`/api/roles`)
-> Todos os endpoints de roles exigem autenticação com perfil **ADMIN**.
-| Método | Endpoint | Descrição |
-|---|---|---|
-| `POST` | `/roles` | Cria nova role |
-| `GET` | `/roles` | Lista todas as roles |
+## 🏷️ Endpoints — Roles (`/api/roles`)  
+Todos os endpoints de roles exigem autenticação com perfil **ADMIN**.
+
+| Método | Endpoint | Descrição |  
+|---|---|---|  
+| `POST` | `/roles` | Cria nova role |  
+| `GET` | `/roles` | Lista todas as roles |  
+
 ### Criar role — `POST /roles`
 ```json
 {
@@ -100,31 +109,32 @@ Todos os endpoints que retornam um usuário incluem o campo `roles`:
 }
 ```
 ---
-## 📅 Endpoints — Eventos (`/api/events`)
+## 📅 Endpoints — Eventos (`/api/events`)  
 
-> Tabela no banco: `events`
-| Método | Endpoint | Descrição | Acesso |
-|---|---|---|---|
-| `POST` | `/events` | Cria novo evento | Autenticado |
-| `GET` | `/events` | Lista eventos com filtros e ordenação | Público |
-| `GET` | `/events/{id}` | Busca evento por ID | Público |
-| `PATCH` | `/events/{id}` | Atualiza dados do evento | Autenticado |
-| `DELETE` | `/events/{id}` | Remove evento | ADMIN |
-| `POST` | `/events/{eventId}/participants/{participantId}` | Associa participante ao evento | Autenticado |
-| `DELETE` | `/events/{eventId}/participants/{participantId}` | Remove participante do evento | ADMIN |
-| `GET` | `/events/{eventId}/participants` | Lista participantes do evento | Público |
-### Filtros e ordenação — `GET /events`
-Todos os parâmetros são opcionais e combináveis:
-| Parâmetro | Tipo | Descrição | Exemplo |
-|---|---|---|---|
-| `name` | string | Filtra por nome (parcial, case-insensitive) | `name=java` |
-| `status` | enum | Filtra por status | `status=SCHEDULED` |
-| `location` | string | Filtra por local (parcial, case-insensitive) | `location=curitiba` |
-| `startDate` | ISO datetime | Eventos a partir desta data | `startDate=2026-01-01T00:00:00` |
-| `endDate` | ISO datetime | Eventos até esta data | `endDate=2026-12-31T23:59:59` |
-| `sortBy` | string | Campo de ordenação (`name`, `eventDate`, `createdAt`, `location`) | `sortBy=eventDate` |
-| `direction` | string | Direção da ordenação (`ASC` ou `DESC`) | `direction=ASC` |
-**Exemplo completo:**
+###  Tabela no banco: `events`  
+| Método | Endpoint | Descrição | Acesso |  
+|---|---|---|---|  
+| `POST` | `/events` | Cria novo evento | Autenticado |  
+| `GET` | `/events` | Lista eventos com filtros e ordenação | Público |  
+| `GET` | `/events/{id}` | Busca evento por ID | Público |  
+| `PATCH` | `/events/{id}` | Atualiza dados do evento | Autenticado |  
+| `DELETE` | `/events/{id}` | Remove evento | ADMIN |  
+| `POST` | `/events/{eventId}/participants/{participantId}` | Associa participante ao evento | Autenticado |  
+| `DELETE` | `/events/{eventId}/participants/{participantId}` | Remove participante do evento | ADMIN |  
+| `GET` | `/events/{eventId}/participants` | Lista participantes do evento | Público |  
+
+### Filtros e ordenação — `GET /events`  
+| Parâmetro | Tipo | Descrição | Exemplo |  
+|---|---|---|---|  
+| `name` | string | Filtra por nome (parcial, case-insensitive) | `name=java` |  
+| `status` | enum | Filtra por status | `status=SCHEDULED` |  
+| `location` | string | Filtra por local (parcial, case-insensitive) | `location=curitiba` |  
+| `startDate` | ISO datetime | Eventos a partir desta data | `startDate=2026-01-01T00:00:00` |  
+| `endDate` | ISO datetime | Eventos até esta data | `endDate=2026-12-31T23:59:59` |  
+| `sortBy` | string | Campo de ordenação (`name`, `eventDate`, `createdAt`, `location`) | `sortBy=eventDate` |  
+| `direction` | string | Direção da ordenação (`ASC` ou `DESC`) | `direction=ASC` |  
+
+**Exemplo completo:**  
 ```
 GET /api/events?name=java&status=SCHEDULED&location=curitiba&sortBy=eventDate&direction=ASC
 ```
@@ -134,6 +144,7 @@ GET /api/events?name=java&status=SCHEDULED&location=curitiba&sortBy=eventDate&di
 | `SCHEDULED` | Evento agendado (padrão) |
 | `CANCELLED` | Evento cancelado |
 | `FINISHED` | Evento finalizado |
+
 ### Criar evento — `POST /events`
 ```json
 {
@@ -154,18 +165,18 @@ Todos os campos são opcionais:
 }
 ```
 ---
-## 👥 Endpoints — Participantes (`/api/participants`)
+## 👥 Endpoints — Participantes (`/api/participants`)  
 
-> Tabela no banco: `participants`
-| Método | Endpoint | Descrição | Acesso |
-|---|---|---|---|
-| `POST` | `/participants` | Cria novo participante | Autenticado |
-| `GET` | `/participants` | Lista todos os participantes | Público |
-| `GET` | `/participants?sortDir=ASC\|DESC` | Lista participantes ordenados por nome | Público |
-| `GET` | `/participants/{id}` | Busca participante por ID | Público |
-| `PATCH` | `/participants/{id}` | Atualiza dados do participante | Autenticado |
-| `DELETE` | `/participants/{id}` | Remove participante | ADMIN |
-### Criar participante — `POST /participants`
+###  Tabela no banco: `participants`  
+| Método | Endpoint | Descrição | Acesso |  
+|---|---|---|---|  
+| `POST` | `/participants` | Cria novo participante | Autenticado |  
+| `GET` | `/participants` | Lista todos os participantes | Público |  
+| `GET` | `/participants?sortDir=ASC\|DESC` | Lista participantes ordenados por nome | Público |  
+| `GET` | `/participants/{id}` | Busca participante por ID | Público |  
+| `PATCH` | `/participants/{id}` | Atualiza dados do participante | Autenticado |  
+| `DELETE` | `/participants/{id}` | Remove participante | ADMIN |  
+### Criar participante — `POST /participants`  
 ```json
 {
   "name": "João Silva",
@@ -203,14 +214,15 @@ Todos os campos são opcionais:
 - Um participante pode existir sem estar vinculado a nenhum evento.
 - Buscar participante inexistente retorna `404 Not Found`.
 ### Inicialização automática (Bootstrapper)
-Ao subir a aplicação, são criados automaticamente:
-| Recurso | Valor padrão |
-|---|---|
-| Role | `USER` |
-| Role | `ADMIN` |
-| Usuário admin | `admin@authserver.com` / `admin` |
-> ⚠️ **Atenção:** altere as credenciais padrão antes de usar em produção.
-> 💡 Todo novo usuário criado via `POST /users` recebe automaticamente a role `USER`.
+Ao subir a aplicação, são criados automaticamente:  
+
+| Recurso | Valor padrão |  
+|---|---|  
+| Role | `USER` |  
+| Role | `ADMIN` |  
+| Usuário admin | `admin@authserver.com` / `admin` |  
+> ⚠️ **Atenção:** altere as credenciais padrão antes de usar em produção.  
+> 💡 Todo novo usuário criado via `POST /users` recebe automaticamente a role `USER`.  
 ---
 ## 🔒 Regras de Segurança
 - Sessão **stateless** (sem cookies/sessão no servidor).
