@@ -4,7 +4,7 @@ Servidor de autenticação e autorização baseado em **JWT**, desenvolvido com 
 
 > **Autor:** Ricardo Del Vecchio   
 > **Repositório:** https://github.com/ricvecchio/spring-auth-server   
-> **Apresentação Youtube:** [https://youtu.be/JZKoe0lHUAc](https://youtu.be/JZKoe0lHUAc)
+> **Apresentação Youtube:** https://youtu.be/WYS0-PJBDR8
 
 ---
 ## 🛠️ Tecnologias
