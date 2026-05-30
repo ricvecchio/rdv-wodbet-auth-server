@@ -1,27 +1,18 @@
 spring:
+  config:
+    import: "classpath:security.yaml"
   application:
     name: authserver
-  datasource:
-    url: jdbc:h2:mem:db
-    username: sa
-    password: sa
-  jpa:
-    show-sql: true
-  h2:
-    console:
-      enabled: true
   web:
     error:
       whitelabel:
         enabled: false
       include-message: always
-      include-binding-errors: always
-      include-stacktrace: always
-      include-exception: true
 
 server:
   servlet:
     context-path: /api
+  port: ${PORT:8080}
 
 springdoc:
   swagger-ui:
@@ -30,4 +21,6 @@ springdoc:
 logging:
   file:
     path: ./logs
-
+  level:
+    root: INFO
+    br.pucpr: DEBUG
