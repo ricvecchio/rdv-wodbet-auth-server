@@ -3,8 +3,11 @@ package br.pucpr.authserver.users.controllers
 import br.pucpr.authserver.exceptions.ForbiddenException
 import br.pucpr.authserver.security.UserToken
 import br.pucpr.authserver.users.dtos.requests.CreateUserRequest
-import br.pucpr.authserver.users.dtos.requests.LoginRequest
+import br.pucpr.authserver.users.dtos.requests.PhoneConfirmRequest
+import br.pucpr.authserver.users.dtos.requests.PhoneLoginRequest
+import br.pucpr.authserver.users.dtos.requests.UpdateUserProfileRequest
 import br.pucpr.authserver.users.dtos.requests.UpdateUserRequest
+import br.pucpr.authserver.users.dtos.responses.BackendUserResponse
 import br.pucpr.authserver.users.dtos.responses.UserResponse
 import br.pucpr.authserver.users.enums.SortDir
 import br.pucpr.authserver.users.services.UserService
@@ -42,11 +45,36 @@ class UserController(val service: UserService) {
         .let { UserResponse(it) }
         .let { ResponseEntity.status(HttpStatus.CREATED).body(it) }
 
+    /**
+     * Phone + UUID login (iOS flow).
+     * HTTP 200 → user already exists and is active (returns BackendUserResponse)
+     * HTTP 202 → confirmation code sent (no body)
+     */
     @PostMapping("/login")
-    @Operation(summary = "Login", description = "Autentica o usuário e retorna um token JWT.")
-    fun login(
-        @Valid @RequestBody login: LoginRequest
-    ) = service.login(login.email!!, login.password!!)
+    @Operation(summary = "Login por telefone", description = "Autentica por telefone + uuid. Retorna usuário (200) ou envia código (202).")
+    fun phoneLogin(
+        @Valid @RequestBody request: PhoneLoginRequest
+    ): ResponseEntity<*> {
+        val user = service.phoneLogin(request.phone!!, request.uuid!!)
+        return if (user != null) {
+            ResponseEntity.ok(BackendUserResponse(user))
+        } else {
+            ResponseEntity.status(HttpStatus.ACCEPTED).build<Void>()
+        }
+    }
+
+    /**
+     * Confirm phone code (iOS flow).
+     * HTTP 200 → code valid, returns BackendUserResponse
+     */
+    @PostMapping("/confirm")
+    @Operation(summary = "Confirmar código", description = "Valida o código de confirmação e retorna o usuário.")
+    fun confirmPhone(
+        @Valid @RequestBody request: PhoneConfirmRequest
+    ): ResponseEntity<BackendUserResponse> {
+        val user = service.confirmPhone(request.phone!!, request.uuid!!, request.code!!)
+        return ResponseEntity.ok(BackendUserResponse(user))
+    }
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar usuário por ID")
@@ -56,10 +84,23 @@ class UserController(val service: UserService) {
         .let { UserResponse(it) }
         .let { ResponseEntity.ok(it) }
 
+    /**
+     * Update user profile (iOS flow) – PUT /users/{id}
+     */
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar perfil do usuário (iOS)", description = "Atualiza nome e descrição do usuário.")
+    fun updateProfile(
+        @PathVariable id: Long,
+        @RequestBody request: UpdateUserProfileRequest
+    ): ResponseEntity<BackendUserResponse> {
+        val user = service.updateProfile(id, request.name, request.description)
+        return ResponseEntity.ok(BackendUserResponse(user))
+    }
+
     @PreAuthorize("permitAll()")
     @SecurityRequirement(name = "jwt-auth")
     @PatchMapping("/{id}")
-    @Operation(summary = "Atualizar usuário", description = "Atualiza o nome do usuário. Somente o próprio usuário ou ADMIN pode alterar.")
+    @Operation(summary = "Atualizar usuário (legado)", description = "Atualiza o nome do usuário. Somente o próprio usuário ou ADMIN pode alterar.")
     fun updateUser(
         @PathVariable id: Long,
         @Valid @RequestBody user: UpdateUserRequest,

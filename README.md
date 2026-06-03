@@ -1,5 +1,5 @@
 # Spring Auth Server
-Servidor de autenticação e autorização baseado em **JWT**, desenvolvido com **Kotlin + Spring Boot**. Permite gerenciar usuários, perfis de acesso, eventos e participantes.
+Servidor de autenticação e autorização baseado em **JWT**, desenvolvido com **Kotlin + Spring Boot**. Permite gerenciar usuários, perfis de acesso, eventos e participantes. Suporta também fluxo de login por **telefone + UUID** (utilizado pelo app iOS).
 
 
 > **Autor:** Ricardo Del Vecchio   
@@ -17,39 +17,67 @@ Servidor de autenticação e autorização baseado em **JWT**, desenvolvido com 
 | JJWT | 0.13.0 |
 | Spring Data JPA | (gerenciado pelo Boot) |
 | H2 Database | In-memory |
+| PostgreSQL | Produção / dev |
 | SpringDoc OpenAPI (Swagger) | 3.0.2 |
 ---
 ## 🚀 Como executar
 ```bash
-./gradlew bootRun
+# Perfil local (H2 in-memory)
+./gradlew bootRun --args='--spring.profiles.active=local'
+
+# Perfil dev (PostgreSQL via variáveis de ambiente)
+./gradlew bootRun --args='--spring.profiles.active=dev'
 ```
-A aplicação sobe em `http://localhost:8080/api`.
-> **Swagger UI:** `http://localhost:8080/api`  
-> **H2 Console:** `http://localhost:8080/api/h2-console` (usuário: `sa`, senha: `sa`)
+A aplicação sobe em `http://localhost:8080`.
+> **Swagger UI:** `http://localhost:8080`  
+> **H2 Console (perfil local):** `http://localhost:8080/h2-console` (usuário: `sa`, senha: `sa`)
+
 ---
-## 🔐 Autenticação
-A API utiliza **JWT Bearer Token**. Para acessar endpoints protegidos:
-1. Faça login em `POST /api/users/login`
-2. Use o token retornado no header: `Authorization: Bearer <token>`  
+## 🔐 Autenticação JWT (fluxo legado)
+A API suporta autenticação via **JWT Bearer Token** para os endpoints legados:
+1. Crie um usuário em `POST /users`
+2. Faça login em `POST /users/login` (com e-mail e senha — **não utilizado pelo app iOS**)
+3. Use o token retornado no header: `Authorization: Bearer <token>`
 
 | Perfil | Expiração do token |
 |---|---|
 | Usuário comum | 48 horas |
 | ADMIN | 1 hora |
+
 ---
-## 👤 Endpoints — Usuários (`/api/users`)
+## 📱 Autenticação por Telefone (fluxo iOS)
+O app iOS utiliza um fluxo sem senha baseado em **telefone + UUID + código de confirmação**. Nenhum token JWT é retornado nesse fluxo — o usuário é retornado diretamente.
+
+### Fluxo completo
+```
+1. POST /users/login   → phone + uuid
+      ↳ HTTP 200: usuário já cadastrado e ativo → retorna BackendUserResponse
+      ↳ HTTP 202: código de 6 dígitos gerado e enviado via log (FakeSms)
+
+2. POST /users/confirm → phone + uuid + code
+      ↳ HTTP 200: código válido → cria/atualiza usuário e retorna BackendUserResponse
+
+3. PUT  /users/{id}    → name + description
+      ↳ HTTP 200: perfil atualizado → retorna BackendUserResponse
+```
+
+---
+## 👤 Endpoints — Usuários (`/users`)
 | Método | Endpoint | Descrição | Acesso |
 |---|---|---|---|
 | `GET` | `/users` | Lista todos os usuários | Público |
 | `GET` | `/users?role={role}` | Lista usuários por role | Público |
 | `GET` | `/users?sortDir=ASC\|DESC` | Lista usuários ordenados por nome | Público |
 | `GET` | `/users/{id}` | Busca usuário por ID | Público |
-| `POST` | `/users` | Cria novo usuário | Público |
-| `POST` | `/users/login` | Realiza login e retorna JWT | Público |
-| `PATCH` | `/users/{id}` | Atualiza nome do usuário | Autenticado (próprio usuário ou ADMIN) |
+| `POST` | `/users` | Cria novo usuário (fluxo legado) | Público |
+| `POST` | `/users/login` | Login por telefone + uuid (iOS) | Público |
+| `POST` | `/users/confirm` | Confirma código e retorna usuário (iOS) | Público |
+| `PUT` | `/users/{id}` | Atualiza nome e descrição do perfil (iOS) | Público |
+| `PATCH` | `/users/{id}` | Atualiza nome do usuário (legado) | Autenticado (próprio usuário ou ADMIN) |
 | `DELETE` | `/users/{id}` | Remove usuário | ADMIN |
 | `PUT` | `/users/{id}/roles/{role}` | Adiciona role ao usuário | ADMIN |
-### Criar usuário — `POST /users`
+
+### Criar usuário — `POST /users` (legado)
 ```json
 {
   "email": "usuario@email.com",
@@ -57,49 +85,77 @@ A API utiliza **JWT Bearer Token**. Para acessar endpoints protegidos:
   "name": "Nome do Usuário"
 }
 ```
-### Resposta de usuário
-Todos os endpoints que retornam um usuário incluem o campo `roles`:
+
+### Login por telefone — `POST /users/login` (iOS)
+**Request:**
 ```json
 {
-  "id": 1,
-  "email": "usuario@email.com",
-  "name": "Nome do Usuário",
-  "roles": ["ADMIN"]
+  "phone": "11999999999",
+  "uuid": "uuid-dispositivo"
 }
 ```
-### Login — `POST /users/login`
+**Respostas:**
+- `HTTP 200` — usuário já cadastrado e ativo (retorna `BackendUserResponse`)
+- `HTTP 202` — código de confirmação enviado (sem body)
+
+### Confirmar código — `POST /users/confirm` (iOS)
+**Request:**
 ```json
 {
-  "email": "usuario@email.com",
-  "password": "Senha@123"
+  "phone": "11999999999",
+  "uuid": "uuid-dispositivo",
+  "code": "123456"
 }
 ```
-**Resposta:**
+**Resposta `HTTP 200`:**
 ```json
 {
-  "token": "<jwt>",
-  "user": {
-    "id": 1,
-    "email": "usuario@email.com",
-    "name": "Nome do Usuário",
-    "roles": ["ADMIN"]
-  }
+  "id": "1",
+  "name": "Ricardo",
+  "phone": "11999999999",
+  "uuid": "uuid-dispositivo",
+  "active": true,
+  "description": "texto opcional",
+  "createdAt": "2026-06-03T18:00:00Z"
 }
 ```
-### Atualizar nome — `PATCH /users/{id}`
+
+### Atualizar perfil — `PUT /users/{id}` (iOS)
+**Request:**
+```json
+{
+  "name": "Ricardo",
+  "description": "texto opcional",
+  "phone": null
+}
+```
+**Resposta `HTTP 200`:** mesmo formato `BackendUserResponse` acima.
+
+### Atualizar nome — `PATCH /users/{id}` (legado)
 ```json
 {
   "name": "Novo Nome"
 }
 ```
+
+### Resposta legada de usuário — `UserResponse`
+```json
+{
+  "id": 1,
+  "email": "usuario@email.com",
+  "name": "Nome do Usuário",
+  "roles": ["USER"]
+}
+```
+
 ---
-## 🏷️ Endpoints — Roles (`/api/roles`)  
+## 🏷️ Endpoints — Roles (`/roles`)
 Todos os endpoints de roles exigem autenticação com perfil **ADMIN**.
 
-| Método | Endpoint | Descrição |  
-|---|---|---|  
-| `POST` | `/roles` | Cria nova role |  
-| `GET` | `/roles` | Lista todas as roles |  
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `POST` | `/roles` | Cria nova role |
+| `GET` | `/roles` | Lista todas as roles |
 
 ### Criar role — `POST /roles`
 ```json
@@ -109,35 +165,36 @@ Todos os endpoints de roles exigem autenticação com perfil **ADMIN**.
 }
 ```
 ---
-## 📅 Endpoints — Eventos (`/api/events`)  
+## 📅 Endpoints — Eventos (`/events`)
 
-###  Tabela no banco: `events`  
-| Método | Endpoint | Descrição | Acesso |  
-|---|---|---|---|  
-| `POST` | `/events` | Cria novo evento | Autenticado |  
-| `GET` | `/events` | Lista eventos com filtros e ordenação | Público |  
-| `GET` | `/events/{id}` | Busca evento por ID | Público |  
-| `PATCH` | `/events/{id}` | Atualiza dados do evento | Autenticado |  
-| `DELETE` | `/events/{id}` | Remove evento | ADMIN |  
-| `POST` | `/events/{eventId}/participants/{participantId}` | Associa participante ao evento | Autenticado |  
-| `DELETE` | `/events/{eventId}/participants/{participantId}` | Remove participante do evento | ADMIN |  
-| `GET` | `/events/{eventId}/participants` | Lista participantes do evento | Público |  
+### Tabela no banco: `events`
+| Método | Endpoint | Descrição | Acesso |
+|---|---|---|---|
+| `POST` | `/events` | Cria novo evento | Autenticado |
+| `GET` | `/events` | Lista eventos com filtros e ordenação | Público |
+| `GET` | `/events/{id}` | Busca evento por ID | Público |
+| `PATCH` | `/events/{id}` | Atualiza dados do evento | Autenticado |
+| `DELETE` | `/events/{id}` | Remove evento | ADMIN |
+| `POST` | `/events/{eventId}/participants/{participantId}` | Associa participante ao evento | Autenticado |
+| `DELETE` | `/events/{eventId}/participants/{participantId}` | Remove participante do evento | ADMIN |
+| `GET` | `/events/{eventId}/participants` | Lista participantes do evento | Público |
 
-### Filtros e ordenação — `GET /events`  
-| Parâmetro | Tipo | Descrição | Exemplo |  
-|---|---|---|---|  
-| `name` | string | Filtra por nome (parcial, case-insensitive) | `name=java` |  
-| `status` | enum | Filtra por status | `status=SCHEDULED` |  
-| `location` | string | Filtra por local (parcial, case-insensitive) | `location=curitiba` |  
-| `startDate` | ISO datetime | Eventos a partir desta data | `startDate=2026-01-01T00:00:00` |  
-| `endDate` | ISO datetime | Eventos até esta data | `endDate=2026-12-31T23:59:59` |  
-| `sortBy` | string | Campo de ordenação (`name`, `eventDate`, `createdAt`, `location`) | `sortBy=eventDate` |  
-| `direction` | string | Direção da ordenação (`ASC` ou `DESC`) | `direction=ASC` |  
+### Filtros e ordenação — `GET /events`
+| Parâmetro | Tipo | Descrição | Exemplo |
+|---|---|---|---|
+| `name` | string | Filtra por nome (parcial, case-insensitive) | `name=java` |
+| `status` | enum | Filtra por status | `status=SCHEDULED` |
+| `location` | string | Filtra por local (parcial, case-insensitive) | `location=curitiba` |
+| `startDate` | ISO datetime | Eventos a partir desta data | `startDate=2026-01-01T00:00:00` |
+| `endDate` | ISO datetime | Eventos até esta data | `endDate=2026-12-31T23:59:59` |
+| `sortBy` | string | Campo de ordenação (`name`, `eventDate`, `createdAt`, `location`) | `sortBy=eventDate` |
+| `direction` | string | Direção da ordenação (`ASC` ou `DESC`) | `direction=ASC` |
 
-**Exemplo completo:**  
+**Exemplo completo:**
 ```
-GET /api/events?name=java&status=SCHEDULED&location=curitiba&sortBy=eventDate&direction=ASC
+GET /events?name=java&status=SCHEDULED&location=curitiba&sortBy=eventDate&direction=ASC
 ```
+
 ### Status do evento
 | Status | Descrição |
 |---|---|
@@ -165,18 +222,19 @@ Todos os campos são opcionais:
 }
 ```
 ---
-## 👥 Endpoints — Participantes (`/api/participants`)  
+## 👥 Endpoints — Participantes (`/participants`)
 
-###  Tabela no banco: `participants`  
-| Método | Endpoint | Descrição | Acesso |  
-|---|---|---|---|  
-| `POST` | `/participants` | Cria novo participante | Autenticado |  
-| `GET` | `/participants` | Lista todos os participantes | Público |  
-| `GET` | `/participants?sortDir=ASC\|DESC` | Lista participantes ordenados por nome | Público |  
-| `GET` | `/participants/{id}` | Busca participante por ID | Público |  
-| `PATCH` | `/participants/{id}` | Atualiza dados do participante | Autenticado |  
-| `DELETE` | `/participants/{id}` | Remove participante | ADMIN |  
-### Criar participante — `POST /participants`  
+### Tabela no banco: `participants`
+| Método | Endpoint | Descrição | Acesso |
+|---|---|---|---|
+| `POST` | `/participants` | Cria novo participante | Autenticado |
+| `GET` | `/participants` | Lista todos os participantes | Público |
+| `GET` | `/participants?sortDir=ASC\|DESC` | Lista participantes ordenados por nome | Público |
+| `GET` | `/participants/{id}` | Busca participante por ID | Público |
+| `PATCH` | `/participants/{id}` | Atualiza dados do participante | Autenticado |
+| `DELETE` | `/participants/{id}` | Remove participante | ADMIN |
+
+### Criar participante — `POST /participants`
 ```json
 {
   "name": "João Silva",
@@ -195,9 +253,13 @@ Todos os campos são opcionais:
 ---
 ## 📋 Regras de Negócio
 ### Usuários
-- **E-mail único:** não é possível cadastrar dois usuários com o mesmo e-mail.
-- **Senha:** mínimo 8 caracteres, obrigatório conter letra, número e caractere especial (`@$!%*#?&`).
-- **Atualização:** apenas o próprio usuário ou um ADMIN pode alterar o nome.
+- **Login por telefone:** o número é normalizado (removendo caracteres não numéricos) antes de buscar/salvar.
+- **UUID único por dispositivo:** se o telefone existir mas com UUID diferente, um novo código é gerado.
+- **Código de confirmação:** 6 dígitos, válido por **10 minutos**, marcado como usado após consumo.
+- **Criação automática:** ao confirmar o código, se o telefone não estiver cadastrado, um novo usuário é criado automaticamente.
+- **E-mail único (legado):** não é possível cadastrar dois usuários com o mesmo e-mail.
+- **Senha (legado):** mínimo 8 caracteres, obrigatório conter letra, número e caractere especial (`@$!%*#?&`).
+- **Atualização (legado):** apenas o próprio usuário ou um ADMIN pode alterar o nome via `PATCH`.
 - **Remoção:** um ADMIN não pode ser deletado se for o único com essa role no sistema.
 ### Roles
 - O nome da role é sempre convertido e armazenado em **maiúsculas**.
@@ -214,23 +276,25 @@ Todos os campos são opcionais:
 - Um participante pode existir sem estar vinculado a nenhum evento.
 - Buscar participante inexistente retorna `404 Not Found`.
 ### Inicialização automática (Bootstrapper)
-Ao subir a aplicação, são criados automaticamente:  
+Ao subir a aplicação, são criados automaticamente:
 
-| Recurso | Valor padrão |  
-|---|---|  
-| Role | `USER` |  
-| Role | `ADMIN` |  
-| Usuário admin | `admin@authserver.com` / `admin` |  
+| Recurso | Valor padrão |
+|---|---|
+| Role | `USER` |
+| Role | `ADMIN` |
+| Usuário admin | `admin@authserver.com` / `admin` |
 > ⚠️ **Atenção:** altere as credenciais padrão antes de usar em produção.  
-> 💡 Todo novo usuário criado via `POST /users` recebe automaticamente a role `USER`.  
+> 💡 Todo novo usuário criado via `POST /users` recebe automaticamente a role `USER`.
+
 ---
 ## 🔒 Regras de Segurança
 - Sessão **stateless** (sem cookies/sessão no servidor).
 - **CORS** liberado para todas as origens (configurar restrições em produção).
 - **CSRF** desabilitado.
-- Endpoints `GET` são públicos; criação de usuário e login também são públicos.
-- Ações de criação e atualização requerem autenticação JWT.
+- Endpoints `GET`, `POST /users`, `POST /users/login`, `POST /users/confirm` e `PUT /users/{id}` são públicos.
+- Ações de criação e atualização (legado) requerem autenticação JWT.
 - Ações destrutivas (`DELETE`) requerem perfil **ADMIN**.
+
 ---
 ## 📁 Estrutura do Projeto
 ```
@@ -263,19 +327,27 @@ src/main/kotlin/br/pucpr/authserver/
 │   ├── dtos/
 │   │   ├── requests/
 │   │   │   ├── CreateUserRequest.kt
-│   │   │   ├── LoginRequest.kt
-│   │   │   └── UpdateUserRequest.kt
+│   │   │   ├── LoginRequest.kt       # Legado: email + password
+│   │   │   ├── PhoneLoginRequest.kt  # iOS: phone + uuid
+│   │   │   ├── PhoneConfirmRequest.kt# iOS: phone + uuid + code
+│   │   │   ├── UpdateUserRequest.kt  # Legado: name
+│   │   │   └── UpdateUserProfileRequest.kt # iOS: name + description
 │   │   └── responses/
-│   │       ├── LoginResponse.kt
-│   │       └── UserResponse.kt
+│   │       ├── LoginResponse.kt      # Legado: token + UserResponse
+│   │       ├── UserResponse.kt       # Legado: id, email, name, roles
+│   │       └── BackendUserResponse.kt# iOS: id, name, phone, uuid, active, description, createdAt
 │   ├── entities/
-│   │   └── User.kt                   # Entidade User
+│   │   ├── User.kt                   # Entidade User (tabela UserTable)
+│   │   └── ConfirmationCode.kt       # Entidade de código de confirmação (tabela ConfirmationCode)
 │   ├── enums/
 │   │   └── SortDir.kt                # Enum de direção de ordenação (ASC/DESC)
 │   ├── repositories/
-│   │   └── UserRepository.kt         # Repositório JPA
+│   │   ├── UserRepository.kt         # Repositório JPA
+│   │   └── ConfirmationCodeRepository.kt # Repositório JPA de códigos
 │   └── services/
-│       └── UserService.kt            # Regras de negócio de usuários
+│       ├── UserService.kt            # Regras de negócio de usuários
+│       ├── ConfirmationCodeService.kt# Geração e validação de códigos
+│       └── FakeSmsService.kt         # Simulação de envio de SMS via log
 ├── events/
 │   ├── controllers/
 │   │   └── EventController.kt        # Endpoints /events e /events/{id}/participants
@@ -319,10 +391,19 @@ src/main/kotlin/br/pucpr/authserver/
 ## ⚙️ Configuração (`application.yaml`)
 ```yaml
 server:
-  servlet:
-    context-path: /api   # Todas as rotas prefixadas com /api
+  port: ${PORT:8080}   # Sem context-path — rotas acessadas diretamente em /
 spring:
   datasource:
-    url: jdbc:h2:mem:db  # Banco em memória (dados perdidos ao reiniciar)
+    url: jdbc:h2:mem:db  # Banco em memória (perfil local) — dados perdidos ao reiniciar
 ```
-> Para ambientes produtivos, substitua o H2 por um banco persistente (PostgreSQL, MySQL, etc.) e atualize as variáveis de conexão.
+> Para o perfil **dev** (AWS RDS / PostgreSQL), as variáveis de conexão são lidas de:  
+> `RDS_HOSTNAME`, `RDS_PORT`, `RDS_DB_NAME`, `RDS_USERNAME`, `RDS_PASSWORD`  
+> Para ambientes produtivos, substitua o H2 por um banco persistente e atualize as variáveis de conexão.
+
+---
+## 📨 FakeSmsService — Simulação de envio de código
+Durante o desenvolvimento, o código de confirmação **não é enviado por SMS real**. Ele é impresso no log da aplicação:
+```
+=== [FakeSMS] Sending confirmation code to phone 11999999999: CODE = 482931 ===
+```
+Basta verificar o terminal ou o arquivo `logs/spring.log` para obter o código durante os testes.

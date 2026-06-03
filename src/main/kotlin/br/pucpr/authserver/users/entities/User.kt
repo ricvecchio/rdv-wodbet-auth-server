@@ -2,6 +2,7 @@ package br.pucpr.authserver.users.entities
 
 import br.pucpr.authserver.roles.entities.Role
 import jakarta.persistence.*
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "UserTable")
@@ -14,6 +15,15 @@ class User(
 
     var password: String,
     var name: String = "",
+
+    var phone: String? = null,
+    var uuid: String? = null,
+    var active: Boolean = true,
+
+    @Column(columnDefinition = "TEXT")
+    var description: String? = null,
+
+    var createdAt: LocalDateTime = LocalDateTime.now(),
 
     @ManyToMany
     @JoinTable(

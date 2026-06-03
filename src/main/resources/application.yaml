@@ -10,8 +10,6 @@ spring:
       include-message: always
 
 server:
-  servlet:
-    context-path: /api
   port: ${PORT:8080}
 
 springdoc:
