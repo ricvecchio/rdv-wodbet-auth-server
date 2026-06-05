@@ -1,0 +1,557 @@
+{
+  "info": {
+    "name": "Spring Auth Server",
+    "description": "Coleção completa de requisições para o Spring Auth Server. Inclui fluxo iOS (telefone + UUID) e fluxo legado (e-mail + senha + JWT).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "JWT token obtido no login legado. Preenchido automaticamente pelo script do login."
+    },
+    {
+      "key": "userId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "eventId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "participantId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "📱 Usuários — Fluxo iOS (Telefone + UUID)",
+      "description": "Endpoints usados pelo app iOS. Sem JWT — retornam o usuário diretamente.",
+      "item": [
+        {
+          "name": "1. Login por Telefone",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"11999999999\",\n  \"uuid\": \"uuid-dispositivo-teste\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Autentica por telefone + UUID.\n\n**HTTP 200** → usuário já cadastrado e ativo — retorna BackendUserResponse.\n**HTTP 202** → código de 6 dígitos gerado e enviado via log (FakeSms). Verifique o terminal ou `logs/spring.log` para obter o código."
+          }
+        },
+        {
+          "name": "2. Confirmar Código",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "confirm"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"11999999999\",\n  \"uuid\": \"uuid-dispositivo-teste\",\n  \"code\": \"123456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Valida o código de confirmação (6 dígitos, válido por 10 minutos).\n\n**HTTP 200** → código válido — cria ou atualiza usuário e retorna BackendUserResponse.\n**HTTP 404** → nenhum código pendente para phone + uuid.\n**HTTP 400** → código inválido ou expirado."
+          }
+        },
+        {
+          "name": "3. Atualizar Perfil (iOS)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ricardo\",\n  \"description\": \"Atleta e desenvolvedor\",\n  \"phone\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Atualiza nome e descrição do usuário.\n\n**HTTP 200** → retorna BackendUserResponse atualizado."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔐 Usuários — Fluxo Legado (E-mail + Senha + JWT)",
+      "description": "Endpoints do fluxo clássico com e-mail, senha e token JWT.",
+      "item": [
+        {
+          "name": "Criar Usuário",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@email.com\",\n  \"password\": \"Senha@123\",\n  \"name\": \"Nome do Usuário\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Cria um novo usuário com a role USER atribuída automaticamente.\n\n**HTTP 201** → usuário criado."
+          }
+        },
+        {
+          "name": "Login (e-mail + senha)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "    pm.collectionVariables.set('token', res.token);",
+                  "    console.log('Token salvo:', res.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@authserver.com\",\n  \"password\": \"admin\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Login com e-mail e senha.\n\nO script de teste salva automaticamente o token JWT na variável `{{token}}` da coleção.\n\n**HTTP 200** → `{ \"token\": \"...\", \"user\": {...} }`"
+          }
+        },
+        {
+          "name": "Listar Usuários",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Lista todos os usuários. Público."
+          }
+        },
+        {
+          "name": "Listar Usuários por Role",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users?role=ADMIN",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [{ "key": "role", "value": "ADMIN" }]
+            },
+            "description": "Filtra usuários por role. Público."
+          }
+        },
+        {
+          "name": "Listar Usuários Ordenados por Nome",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users?sortDir=ASC",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [{ "key": "sortDir", "value": "ASC" }]
+            }
+          }
+        },
+        {
+          "name": "Buscar Usuário por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Busca um usuário pelo ID. Público."
+          }
+        },
+        {
+          "name": "Atualizar Nome do Usuário (legado)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Novo Nome\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Atualiza o nome do usuário. Somente o próprio usuário ou ADMIN pode alterar.\n\nRequer `Authorization: Bearer {{token}}`."
+          }
+        },
+        {
+          "name": "Adicionar Role ao Usuário",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/roles/ADMIN",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}", "roles", "ADMIN"]
+            },
+            "description": "Atribui a role ADMIN ao usuário. Requer perfil ADMIN.\n\nSubstitua `ADMIN` pela role desejada."
+          }
+        },
+        {
+          "name": "Remover Usuário",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Remove um usuário pelo ID. Requer perfil ADMIN."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏷️ Roles",
+      "description": "Todos os endpoints de roles requerem autenticação com perfil ADMIN.",
+      "item": [
+        {
+          "name": "Criar Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"MODERATOR\",\n  \"description\": \"Moderador de conteúdo\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Cria uma nova role. Requer perfil ADMIN.\n\n**HTTP 201** → role criada."
+          }
+        },
+        {
+          "name": "Listar Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles"]
+            },
+            "description": "Lista todas as roles disponíveis. Requer perfil ADMIN."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📅 Eventos",
+      "description": "Gerenciamento de eventos. Criação e atualização requerem autenticação. DELETE requer ADMIN.",
+      "item": [
+        {
+          "name": "Criar Evento",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Java Summit 2026\",\n  \"description\": \"Conferência sobre Java e JVM\",\n  \"location\": \"Curitiba, PR\",\n  \"eventDate\": \"2026-09-15T09:00:00\",\n  \"status\": \"SCHEDULED\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Cria um novo evento. Requer autenticação.\n\n**HTTP 201** → evento criado."
+          }
+        },
+        {
+          "name": "Listar Eventos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"]
+            },
+            "description": "Lista todos os eventos. Público."
+          }
+        },
+        {
+          "name": "Listar Eventos com Filtros",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/events?name=java&status=SCHEDULED&location=curitiba&sortBy=eventDate&direction=ASC",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"],
+              "query": [
+                { "key": "name", "value": "java", "description": "Filtro parcial por nome (case-insensitive)" },
+                { "key": "status", "value": "SCHEDULED", "description": "SCHEDULED | CANCELLED | FINISHED" },
+                { "key": "location", "value": "curitiba", "description": "Filtro parcial por local (case-insensitive)" },
+                { "key": "startDate", "value": "2026-01-01T00:00:00", "description": "Eventos a partir desta data (ISO 8601)", "disabled": true },
+                { "key": "endDate", "value": "2026-12-31T23:59:59", "description": "Eventos até esta data (ISO 8601)", "disabled": true },
+                { "key": "sortBy", "value": "eventDate", "description": "name | eventDate | createdAt | location" },
+                { "key": "direction", "value": "ASC", "description": "ASC | DESC" }
+              ]
+            },
+            "description": "Lista eventos com filtros opcionais e ordenação. Público."
+          }
+        },
+        {
+          "name": "Buscar Evento por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", "{{eventId}}"]
+            },
+            "description": "Busca um evento pelo ID. Público."
+          }
+        },
+        {
+          "name": "Atualizar Evento",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", "{{eventId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Novo Nome do Evento\",\n  \"location\": \"São Paulo, SP\",\n  \"status\": \"CANCELLED\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Atualiza parcialmente os dados de um evento. Todos os campos são opcionais. Requer autenticação."
+          }
+        },
+        {
+          "name": "Remover Evento",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", "{{eventId}}"]
+            },
+            "description": "Remove um evento pelo ID. Requer perfil ADMIN."
+          }
+        },
+        {
+          "name": "Associar Participante ao Evento",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}/participants/{{participantId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", "{{eventId}}", "participants", "{{participantId}}"]
+            },
+            "description": "Vincula um participante a um evento. Requer autenticação.\n\n**HTTP 409** se o participante já estiver vinculado ao mesmo evento."
+          }
+        },
+        {
+          "name": "Remover Participante do Evento",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}/participants/{{participantId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", "{{eventId}}", "participants", "{{participantId}}"]
+            },
+            "description": "Desvincula um participante de um evento. Requer perfil ADMIN.\n\n**HTTP 400** se o participante não estiver vinculado ao evento."
+          }
+        },
+        {
+          "name": "Listar Participantes do Evento",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}/participants",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", "{{eventId}}", "participants"]
+            },
+            "description": "Lista todos os participantes vinculados a um evento. Público."
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Participantes",
+      "description": "Gerenciamento de participantes. Criação e atualização requerem autenticação. DELETE requer ADMIN.",
+      "item": [
+        {
+          "name": "Criar Participante",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/participants",
+              "host": ["{{baseUrl}}"],
+              "path": ["participants"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"João Silva\",\n  \"email\": \"joao@email.com\",\n  \"phone\": \"(41) 99999-0000\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Cria um novo participante. Requer autenticação.\n\n**HTTP 201** → participante criado."
+          }
+        },
+        {
+          "name": "Listar Participantes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/participants",
+              "host": ["{{baseUrl}}"],
+              "path": ["participants"]
+            },
+            "description": "Lista todos os participantes ordenados por nome (ASC). Público."
+          }
+        },
+        {
+          "name": "Listar Participantes Ordenados",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/participants?sortDir=DESC",
+              "host": ["{{baseUrl}}"],
+              "path": ["participants"],
+              "query": [{ "key": "sortDir", "value": "DESC", "description": "ASC | DESC" }]
+            },
+            "description": "Lista participantes ordenados por nome em ordem decrescente. Público."
+          }
+        },
+        {
+          "name": "Buscar Participante por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/participants/{{participantId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["participants", "{{participantId}}"]
+            },
+            "description": "Busca um participante pelo ID. Público."
+          }
+        },
+        {
+          "name": "Atualizar Participante",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/participants/{{participantId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["participants", "{{participantId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"João Santos\",\n  \"phone\": \"(41) 98888-1111\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Atualiza parcialmente os dados de um participante. Todos os campos são opcionais. Requer autenticação."
+          }
+        },
+        {
+          "name": "Remover Participante",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/participants/{{participantId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["participants", "{{participantId}}"]
+            },
+            "description": "Remove um participante pelo ID. Requer perfil ADMIN."
+          }
+        }
+      ]
+    }
+  ]
+}
+
