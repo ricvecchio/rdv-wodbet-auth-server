@@ -407,3 +407,4 @@ Durante o desenvolvimento, o código de confirmação **não é enviado por SMS 
 === [FakeSMS] Sending confirmation code to phone 11999999999: CODE = 482931 ===
 ```
 Basta verificar o terminal ou o arquivo `logs/spring.log` para obter o código durante os testes.
+# rdv-wodbet-auth-server
