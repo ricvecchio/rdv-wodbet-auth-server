@@ -1,0 +1,1936 @@
+{
+  "info": {
+    "name": "RDV WODBet Auth Server — Collection Completa Atualizada",
+    "description": "Coleção atualizada para testar o backend RDV WODBet Auth Server: fluxo iOS por telefone + UUID, fluxo legado JWT, usuários, roles, apostas, eventos e participantes. Baseada na collection enviada pelo usuário e no README/endpoints documentados do repositório.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "JWT do fluxo legado. Preenchido no request Login Legado."
+    },
+    {
+      "key": "phone",
+      "value": "11999999999",
+      "type": "string"
+    },
+    {
+      "key": "uuid",
+      "value": "uuid-dispositivo-teste",
+      "type": "string"
+    },
+    {
+      "key": "alternateUuid",
+      "value": "uuid-dispositivo-alternativo",
+      "type": "string"
+    },
+    {
+      "key": "code",
+      "value": "123456",
+      "type": "string",
+      "description": "Substituir manualmente pelo código exibido no log FakeSms."
+    },
+    {
+      "key": "userId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "athleteAId",
+      "value": "2",
+      "type": "string"
+    },
+    {
+      "key": "athleteBId",
+      "value": "3",
+      "type": "string"
+    },
+    {
+      "key": "betId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "betIdFinish",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "betIdReject",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "betIdCancel",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "betIdResult",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "eventId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "participantId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "📱 01 — Fluxo iOS: telefone + UUID",
+      "description": "Fluxo principal usado pelo app iOS. Não retorna JWT; retorna o usuário diretamente.",
+      "item": [
+        {
+          "name": "1. Login por telefone — espera 202 no primeiro acesso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{phone}}\",\n  \"uuid\": \"{{uuid}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Se o telefone+uuid ainda não estiver confirmado, retorna 202 e gera código no log FakeSms. Se já estiver confirmado, retorna 200 com usuário."
+          }
+        },
+        {
+          "name": "2. Confirmar código — usar código do log",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "confirm"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{phone}}\",\n  \"uuid\": \"{{uuid}}\",\n  \"code\": \"{{code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Substitua {{code}} pelo código exibido no log do backend. Esperado: 200 OK com usuário."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) { data = {}; }",
+                  "const value = data.id;",
+                  "if (value !== undefined && value !== null) pm.collectionVariables.set('userId', String(value));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Login direto após confirmação — espera 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{phone}}\",\n  \"uuid\": \"{{uuid}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Após confirmar, repetir o login com mesmo phone+uuid deve retornar 200 OK com usuário."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) { data = {}; }",
+                  "const value = data.id;",
+                  "if (value !== undefined && value !== null) pm.collectionVariables.set('userId', String(value));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Atualizar perfil iOS",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ricardo\",\n  \"description\": \"Atleta e desenvolvedor\",\n  \"phone\": null,\n  \"photoUrl\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Atualiza perfil usado pelo app iOS. Esperado: 200 OK com usuário atualizado."
+          }
+        },
+        {
+          "name": "5. Login com UUID diferente — espera 202",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{phone}}\",\n  \"uuid\": \"{{alternateUuid}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Telefone existente com UUID diferente deve gerar novo código e retornar 202."
+          }
+        },
+        {
+          "name": "6. Confirmar UUID diferente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "confirm"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{phone}}\",\n  \"uuid\": \"{{alternateUuid}}\",\n  \"code\": \"{{code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Use o novo código gerado no log. Esperado: 200 OK; backend atualiza o UUID do usuário."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) { data = {}; }",
+                  "const value = data.id;",
+                  "if (value !== undefined && value !== null) pm.collectionVariables.set('userId', String(value));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "📱 02 — Fluxo iOS: cenários de erro",
+      "item": [
+        {
+          "name": "Confirmar código inválido — espera 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "confirm"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{phone}}\",\n  \"uuid\": \"{{uuid}}\",\n  \"code\": \"000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Esperado: 400 Bad Request, código inválido ou expirado."
+          }
+        },
+        {
+          "name": "Confirmar código inexistente — espera 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "confirm"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{phone}}\",\n  \"uuid\": \"uuid-sem-codigo\",\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Esperado: 404 Not Found, sem código pendente para phone+uuid."
+          }
+        },
+        {
+          "name": "Login telefone sem phone — espera 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"\",\n  \"uuid\": \"{{uuid}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Validação de request inválido."
+          }
+        },
+        {
+          "name": "Login telefone sem uuid — espera 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{phone}}\",\n  \"uuid\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Validação de request inválido."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔐 03 — Usuários: legado + consultas",
+      "item": [
+        {
+          "name": "Criar usuário legado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario{{$timestamp}}@email.com\",\n  \"password\": \"Senha@123\",\n  \"name\": \"Usuário Teste\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Cria usuário com role USER. Esperado: 201 Created."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) { data = {}; }",
+                  "const value = data.id;",
+                  "if (value !== undefined && value !== null) pm.collectionVariables.set('userId', String(value));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login legado e-mail + senha",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@authserver.com\",\n  \"password\": \"admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Login clássico. Esperado: 200 OK com token. O script salva {{token}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) { data = {}; }",
+                  "if (data.token) pm.collectionVariables.set('token', data.token);",
+                  "if (data.user && data.user.id) pm.collectionVariables.set('userId', String(data.user.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar usuários ativos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Público. Retorna usuários ativos."
+          }
+        },
+        {
+          "name": "Listar usuários por role ADMIN",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users?role=ADMIN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "ADMIN"
+                }
+              ]
+            },
+            "description": "Público. Filtra usuários por role."
+          }
+        },
+        {
+          "name": "Listar usuários ordenados ASC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users?sortDir=ASC",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "sortDir",
+                  "value": "ASC"
+                }
+              ]
+            },
+            "description": "Público. Ordenação por nome ASC."
+          }
+        },
+        {
+          "name": "Listar usuários ordenados DESC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users?sortDir=DESC",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "sortDir",
+                  "value": "DESC"
+                }
+              ]
+            },
+            "description": "Público. Ordenação por nome DESC."
+          }
+        },
+        {
+          "name": "Buscar usuário por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Público. Retorna UserResponse."
+          }
+        },
+        {
+          "name": "Buscar usuário raw por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/raw",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}",
+                "raw"
+              ]
+            },
+            "description": "Endpoint raw documentado no controller/validação anterior. Útil para depuração."
+          }
+        },
+        {
+          "name": "Atualizar perfil iOS por PUT",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ricardo Atualizado\",\n  \"description\": \"Perfil atualizado via PUT\",\n  \"phone\": null,\n  \"photoUrl\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Público no fluxo iOS. Retorna usuário atualizado."
+          }
+        },
+        {
+          "name": "Atualizar nome legado por PATCH",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Novo Nome Legado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Requer JWT. Próprio usuário ou ADMIN."
+          }
+        },
+        {
+          "name": "Adicionar role ADMIN ao usuário",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/roles/ADMIN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}",
+                "roles",
+                "ADMIN"
+              ]
+            },
+            "description": "Requer ADMIN."
+          }
+        },
+        {
+          "name": "Remover usuário",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Requer ADMIN. Use com cuidado para não remover usuário usado nos testes."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏷️ 04 — Roles",
+      "description": "Endpoints de roles exigem token com perfil ADMIN.",
+      "item": [
+        {
+          "name": "Criar role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"MODERATOR_{{$timestamp}}\",\n  \"description\": \"Moderador de conteúdo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Esperado: 201 Created. Requer ADMIN."
+          }
+        },
+        {
+          "name": "Listar roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ]
+            },
+            "description": "Requer ADMIN."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🥊 05 — Apostas (Bets): consultas e criação",
+      "description": "Endpoints públicos do módulo de apostas.",
+      "item": [
+        {
+          "name": "Listar apostas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets"
+              ]
+            },
+            "description": "Lista apostas ordenadas por createdAt DESC. Pode atualizar status expirado automaticamente."
+          }
+        },
+        {
+          "name": "Criar aposta padrão",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"createdByUserId\": \"{{userId}}\",\n  \"athleteAUserId\": \"{{athleteAId}}\",\n  \"athleteBUserId\": \"{{athleteBId}}\",\n  \"wodTitle\": \"Fran 21-15-9\",\n  \"prizeType\": \"gatorade\",\n  \"prizeOtherDescription\": null,\n  \"expiresAt\": \"2026-12-31T23:59:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Cria aposta padrão. Esperado: 201 Created."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) { data = {}; }",
+                  "const value = data.id;",
+                  "if (value !== undefined && value !== null) pm.collectionVariables.set('betId', String(value));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar aposta por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets/{{betId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets",
+                "{{betId}}"
+              ]
+            },
+            "description": "Busca aposta pelo ID."
+          }
+        },
+        {
+          "name": "Votar em atleta",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets/{{betId}}/vote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets",
+                "{{betId}}",
+                "vote"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"voterUserId\": \"{{userId}}\",\n  \"votedAthleteUserId\": \"{{athleteAId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Registra ou substitui voto. Permitido em open/disputed."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🥊 06 — Apostas: fluxo finalizar por confirmação dupla",
+      "item": [
+        {
+          "name": "1. Criar aposta para finalizar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"createdByUserId\": \"{{userId}}\",\n  \"athleteAUserId\": \"{{athleteAId}}\",\n  \"athleteBUserId\": \"{{athleteBId}}\",\n  \"wodTitle\": \"Grace - fluxo finalizar\",\n  \"prizeType\": \"gatorade\",\n  \"prizeOtherDescription\": null,\n  \"expiresAt\": \"2026-12-31T23:59:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Salva ID em {{betIdFinish}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) { data = {}; }",
+                  "const value = data.id;",
+                  "if (value !== undefined && value !== null) pm.collectionVariables.set('betIdFinish', String(value));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Propor vencedor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets/{{betIdFinish}}/winner",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets",
+                "{{betIdFinish}}",
+                "winner"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requesterUserId\": \"{{userId}}\",\n  \"proposedWinnerUserId\": \"{{athleteAId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Criador ou atletas podem propor vencedor."
+          }
+        },
+        {
+          "name": "3. Confirmar vencedor pelo atleta A",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets/{{betIdFinish}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets",
+                "{{betIdFinish}}",
+                "confirm"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirmerUserId\": \"{{athleteAId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Marca confirmação do atleta A."
+          }
+        },
+        {
+          "name": "4. Confirmar vencedor pelo atleta B",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets/{{betIdFinish}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets",
+                "{{betIdFinish}}",
+                "confirm"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirmerUserId\": \"{{athleteBId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Com as duas confirmações, status deve virar finished."
+          }
+        },
+        {
+          "name": "5. Buscar aposta finalizada",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets/{{betIdFinish}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets",
+                "{{betIdFinish}}"
+              ]
+            },
+            "description": "Validar status=finished e confirmedWinnerUserId."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🥊 07 — Apostas: fluxos alternativos",
+      "item": [
+        {
+          "name": "Criar aposta para rejeição",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"createdByUserId\": \"{{userId}}\",\n  \"athleteAUserId\": \"{{athleteAId}}\",\n  \"athleteBUserId\": \"{{athleteBId}}\",\n  \"wodTitle\": \"Isabel - fluxo rejeição\",\n  \"prizeType\": \"gatorade\",\n  \"prizeOtherDescription\": null,\n  \"expiresAt\": \"2026-12-31T23:59:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) { data = {}; }",
+                  "const value = data.id;",
+                  "if (value !== undefined && value !== null) pm.collectionVariables.set('betIdReject', String(value));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Propor vencedor para rejeição",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets/{{betIdReject}}/winner",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets",
+                "{{betIdReject}}",
+                "winner"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requesterUserId\": \"{{userId}}\",\n  \"proposedWinnerUserId\": \"{{athleteAId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Rejeitar vencedor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets/{{betIdReject}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets",
+                "{{betIdReject}}",
+                "reject"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rejectorUserId\": \"{{athleteBId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Esperado: status=disputed."
+          }
+        },
+        {
+          "name": "Criar aposta para cancelamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"createdByUserId\": \"{{userId}}\",\n  \"athleteAUserId\": \"{{athleteAId}}\",\n  \"athleteBUserId\": \"{{athleteBId}}\",\n  \"wodTitle\": \"Helen - fluxo cancelamento\",\n  \"prizeType\": \"gatorade\",\n  \"prizeOtherDescription\": null,\n  \"expiresAt\": \"2026-12-31T23:59:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) { data = {}; }",
+                  "const value = data.id;",
+                  "if (value !== undefined && value !== null) pm.collectionVariables.set('betIdCancel', String(value));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancelar aposta",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets/{{betIdCancel}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets",
+                "{{betIdCancel}}",
+                "cancel"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requesterUserId\": \"{{userId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Apenas criador. Esperado: status=canceled."
+          }
+        },
+        {
+          "name": "Criar aposta para resultado direto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"createdByUserId\": \"{{userId}}\",\n  \"athleteAUserId\": \"{{athleteAId}}\",\n  \"athleteBUserId\": \"{{athleteBId}}\",\n  \"wodTitle\": \"Diane - fluxo resultado\",\n  \"prizeType\": \"gatorade\",\n  \"prizeOtherDescription\": null,\n  \"expiresAt\": \"2026-12-31T23:59:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) { data = {}; }",
+                  "const value = data.id;",
+                  "if (value !== undefined && value !== null) pm.collectionVariables.set('betIdResult', String(value));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar resultado direto",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bets/{{betIdResult}}/result",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bets",
+                "{{betIdResult}}",
+                "result"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requesterUserId\": \"{{userId}}\",\n  \"athleteAResult\": \"5:30\",\n  \"athleteBResult\": \"6:10\",\n  \"winnerUserId\": \"{{athleteAId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Atualiza resultados e finaliza aposta."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📅 08 — Eventos",
+      "description": "Listagem/busca são públicas. Criação/alteração exigem token; DELETE exige ADMIN.",
+      "item": [
+        {
+          "name": "Criar evento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Java Summit 2026\",\n  \"description\": \"Conferência sobre Java e JVM\",\n  \"location\": \"Curitiba, PR\",\n  \"eventDate\": \"2026-09-15T09:00:00\",\n  \"status\": \"SCHEDULED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Esperado: 201 Created."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) { data = {}; }",
+                  "const value = data.id;",
+                  "if (value !== undefined && value !== null) pm.collectionVariables.set('eventId', String(value));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar eventos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar eventos com filtros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events?name=java&status=SCHEDULED&sortBy=eventDate&direction=ASC",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "java"
+                },
+                {
+                  "key": "status",
+                  "value": "SCHEDULED"
+                },
+                {
+                  "key": "location",
+                  "value": "curitiba",
+                  "disabled": true
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-01-01T00:00:00",
+                  "disabled": true
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-12-31T23:59:59",
+                  "disabled": true
+                },
+                {
+                  "key": "sortBy",
+                  "value": "eventDate"
+                },
+                {
+                  "key": "direction",
+                  "value": "ASC"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar evento por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events",
+                "{{eventId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar evento",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events",
+                "{{eventId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Novo Nome do Evento\",\n  \"location\": \"São Paulo, SP\",\n  \"status\": \"CANCELLED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Associar participante ao evento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}/participants/{{participantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events",
+                "{{eventId}}",
+                "participants",
+                "{{participantId}}"
+              ]
+            },
+            "description": "Autenticado. Retorna 409 se já vinculado."
+          }
+        },
+        {
+          "name": "Listar participantes do evento",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}/participants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events",
+                "{{eventId}}",
+                "participants"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Remover participante do evento",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}/participants/{{participantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events",
+                "{{eventId}}",
+                "participants",
+                "{{participantId}}"
+              ]
+            },
+            "description": "ADMIN. Retorna 400 se não vinculado."
+          }
+        },
+        {
+          "name": "Remover evento",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events",
+                "{{eventId}}"
+              ]
+            },
+            "description": "ADMIN."
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 09 — Participantes",
+      "description": "Listagem/busca públicas. Criação/atualização exigem autenticação. DELETE exige ADMIN.",
+      "item": [
+        {
+          "name": "Criar participante",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/participants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "participants"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"João Silva {{$timestamp}}\",\n  \"email\": \"joao{{$timestamp}}@email.com\",\n  \"phone\": \"(41) 99999-0000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Esperado: 201 Created."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) { data = {}; }",
+                  "const value = data.id;",
+                  "if (value !== undefined && value !== null) pm.collectionVariables.set('participantId', String(value));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar participantes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/participants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "participants"
+              ]
+            },
+            "description": "Público. Ordenação padrão ASC."
+          }
+        },
+        {
+          "name": "Listar participantes DESC",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/participants?sortDir=DESC",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "participants"
+              ],
+              "query": [
+                {
+                  "key": "sortDir",
+                  "value": "DESC"
+                }
+              ]
+            },
+            "description": "Público. Ordenação DESC."
+          }
+        },
+        {
+          "name": "Buscar participante por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/participants/{{participantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "participants",
+                "{{participantId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar participante",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/participants/{{participantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "participants",
+                "{{participantId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"João Santos\",\n  \"phone\": \"(41) 98888-1111\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Remover participante",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/participants/{{participantId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "participants",
+                "{{participantId}}"
+              ]
+            },
+            "description": "ADMIN."
+          }
+        }
+      ]
+    },
+    {
+      "name": "✅ 10 — Ordem recomendada de execução",
+      "description": "1) Rodar Login legado para preencher token. 2) Rodar fluxo iOS: login telefone, copiar código do log e confirmar. 3) Criar/listar usuários. 4) Criar participante e evento. 5) Criar apostas e testar fluxos. 6) Testar cenários de erro. Atualize as variáveis userId, athleteAId e athleteBId com IDs existentes no banco local antes de criar apostas.",
+      "item": []
+    }
+  ]
+}

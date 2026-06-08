@@ -32,182 +32,158 @@ A aplicação sobe em `http://localhost:8080`.
 > **H2 Console (perfil local):** `http://localhost:8080/h2-console` (usuário: `sa`, senha: `sa`)
 
 ---
-## 📦 Coleção de testes e roteiro no Insomnia
-A collection `spring-auth-server.postman_collection.json` documenta os fluxos do projeto e já traz os retornos esperados para validação manual.
+## 🧪 Testes da API com Postman ou Insomnia
 
-### Variáveis da collection
-- `baseUrl` → `http://localhost:8080`
-- `token` → preenchida automaticamente no login legado via script de teste
-- `userId` → usado nos endpoints de usuário
-- `eventId` → usado nos endpoints de evento
-- `participantId` → usado nos endpoints de participante
+Este projeto possui uma collection para facilitar os testes dos principais endpoints do backend do RDV WODBet Auth Server.
 
-### Como importar
-1. Importe o arquivo `spring-auth-server.postman_collection.json` no Postman.
-2. Crie o environment no Insomnia com as variáveis abaixo:
+A collection cobre os seguintes módulos:
+
+- Login iOS por telefone + UUID
+- Usuários
+- Fluxo legado com e-mail, senha e JWT
+- Roles
+- Apostas / Bets
+- Eventos
+- Participantes
+
+A collection completa está no arquivo `rdv-wodbet-auth-server.postman_collection.json` na raiz do projeto. Importe-a no **Postman** ou **Insomnia**.
+
+---
+
+### 1. Configuração inicial
+
+Antes de iniciar os testes, execute a aplicação localmente.
+
+A API deve estar disponível em:
+
+```text
+http://localhost:8080
+```
+
+Na collection, configure as variáveis:
 
 ```json
 {
   "baseUrl": "http://localhost:8080",
+  "token": "",
+  "userId": "1",
   "phone": "11999999999",
   "uuid": "uuid-dispositivo-teste",
   "code": "123456",
-  "userId": "1",
-  "token": "",
+  "betId": "1",
   "eventId": "1",
   "participantId": "1"
 }
 ```
 
-### Fluxos e retornos documentados
-| Fluxo / Endpoint | Método | Resultado esperado |
-|---|---|---|
-| `POST /users/login` (iOS) | `POST` | `200 OK` se o usuário já existir e estiver ativo; `202 Accepted` quando um novo código é gerado e enviado no log (`FakeSms`) |
-| `POST /users/confirm` (iOS) | `POST` | `200 OK` retorna o usuário; `404 Not Found` quando não existe código pendente; `400 Bad Request` quando o código é inválido ou expirou |
-| `PUT /users/{id}` (iOS) | `PUT` | `200 OK` com o perfil atualizado |
-| `POST /users` (legado) | `POST` | `201 Created` com role `USER` atribuída automaticamente |
-| `POST /users/login` (legado) | `POST` | `200 OK` com `{ token, user }` e script salvando `{{token}}` |
-| `POST /roles` | `POST` | `201 Created` com a role criada |
-| `POST /events` | `POST` | `201 Created` com o evento criado |
-| `POST /events/{eventId}/participants/{participantId}` | `POST` | `409 Conflict` se o participante já estiver vinculado ao mesmo evento |
-| `DELETE /events/{eventId}/participants/{participantId}` | `DELETE` | `400 Bad Request` se o participante não estiver vinculado ao evento |
-| `POST /participants` | `POST` | `201 Created` com o participante criado |
+A variável `code` deve ser atualizada manualmente com o código exibido no log do backend após o login por telefone retornar `202 Accepted`.
 
 ---
-## 🔐 Autenticação e roteiros de teste
 
-### Fluxo iOS — telefone + UUID + código
-O app iOS utiliza um fluxo sem senha baseado em **telefone + UUID + código de confirmação**. Nenhum JWT é retornado nesse fluxo; a API retorna o usuário diretamente.
+### 2. Fluxo iOS — Login por telefone + UUID
 
-#### Roteiro no Insomnia
-**1. Configurar Environment**
+Este é o fluxo principal usado pelo app iOS.
 
-Use o environment acima e mantenha `phone`, `uuid`, `code`, `userId` e `token` atualizáveis durante o teste.
+#### 2.1 Login por telefone
 
-**2. Testar fluxo iOS**
+```http
+POST /users/login
+```
 
-**Request 1 — Login por telefone**
-- `POST {{ _.baseUrl }}/users/login`
-- Header: `Content-Type: application/json`
-- Body:
+Body:
+
 ```json
 {
-  "phone": "{{ _.phone }}",
-  "uuid": "{{ _.uuid }}"
+  "phone": "{{phone}}",
+  "uuid": "{{uuid}}"
 }
 ```
-- Resultado esperado: `202 Accepted`
-- Depois, copie o código do log do backend e atualize a variável `code` no Insomnia.
 
-**Request 2 — Confirmar código**
-- `POST {{ _.baseUrl }}/users/confirm`
-- Header: `Content-Type: application/json`
-- Body:
+Resultados esperados:
+
+| Status | Situação |
+|---|---|
+| `202 Accepted` | Telefone ainda não confirmado ou UUID diferente — código gerado no log via FakeSms |
+| `200 OK` | Usuário ativo com mesmo telefone e UUID — retorna o usuário diretamente |
+
+---
+
+#### 2.2 Confirmar código
+
+```http
+POST /users/confirm
+```
+
+Body:
+
 ```json
 {
-  "phone": "{{ _.phone }}",
-  "uuid": "{{ _.uuid }}",
-  "code": "{{ _.code }}"
+  "phone": "{{phone}}",
+  "uuid": "{{uuid}}",
+  "code": "{{code}}"
 }
 ```
-- Resultado esperado: `200 OK`
-- A resposta deve retornar o usuário. Copie o `id` retornado e atualize a variável `userId`.
 
-**Request 3 — Login direto**
-- Repita `POST {{ _.baseUrl }}/users/login` com o mesmo `phone` e `uuid`.
-- Resultado esperado: `200 OK`
-- Agora não deve pedir código novamente.
+Antes de executar, copie o código exibido no log do backend e atualize a variável `code`.
 
-**Request 4 — Atualizar perfil**
-- `PUT {{ _.baseUrl }}/users/{{ _.userId }}`
-- Header: `Content-Type: application/json`
-- Body:
+| Status | Situação |
+|---|---|
+| `200 OK` | Código válido — backend cria ou atualiza o usuário e retorna seus dados |
+| `404 Not Found` | Nenhum código pendente para o telefone + UUID |
+| `400 Bad Request` | Código inválido ou expirado |
+
+---
+
+#### 2.3 Login direto após confirmação
+
+```http
+POST /users/login
+```
+
+Body:
+
+```json
+{
+  "phone": "{{phone}}",
+  "uuid": "{{uuid}}"
+}
+```
+
+Após confirmar o código com sucesso, repetir o login com o mesmo telefone e UUID deve retornar `200 OK` sem solicitar novo código.
+
+---
+
+#### 2.4 Atualizar perfil iOS
+
+```http
+PUT /users/{{userId}}
+```
+
+Body:
+
 ```json
 {
   "name": "Ricardo",
   "description": "Atleta e desenvolvedor",
-  "phone": null
+  "phone": null,
+  "photoUrl": null
 }
 ```
-- Resultado esperado: `200 OK`
 
-#### Testes de erro importantes
-**Código inválido**
-```json
-{
-  "phone": "{{ _.phone }}",
-  "uuid": "{{ _.uuid }}",
-  "code": "000000"
-}
+Resultado esperado: `200 OK` com o usuário atualizado.
+
+---
+
+### 3. Fluxo legado — E-mail, senha e JWT
+
+#### 3.1 Criar usuário
+
+```http
+POST /users
 ```
-Esperado: `400 Bad Request`
 
-**Código inexistente**
+Body:
 
-Use outro UUID:
-```json
-{
-  "phone": "{{ _.phone }}",
-  "uuid": "uuid-sem-codigo",
-  "code": "123456"
-}
-```
-Esperado: `404 Not Found`
-
-**UUID diferente**
-
-No login, use:
-```json
-{
-  "phone": "{{ _.phone }}",
-  "uuid": "novo-uuid-teste"
-}
-```
-Esperado: `202 Accepted`
-
-Depois confirme com o novo código do log.
-
-#### Ordem recomendada
-1. Login telefone → `202`
-2. Copiar código do log
-3. Confirmar código → `200`
-4. Copiar `userId`
-5. Login telefone novamente → `200`
-6. Atualizar perfil → `200`
-7. Testar código inválido → `400`
-8. Testar código inexistente → `404`
-9. Testar UUID diferente → `202`
-
-### Fluxo legado — JWT
-O fluxo clássico usa **e-mail + senha + JWT Bearer Token**.
-
-1. Crie um usuário em `POST /users`.
-2. Faça login em `POST /users/login` com e-mail e senha.
-3. Se retornar `token`, salve-o na variável `token`.
-4. Use o header `Authorization: Bearer {{token}}` nos endpoints protegidos.
-
-| Perfil | Expiração do token |
-|---|---|
-| Usuário comum | 48 horas |
-| ADMIN | 1 hora |
-
-### Endpoints e exemplos de teste
-#### Usuários (`/users`)
-| Método | Endpoint | Descrição | Acesso |
-|---|---|---|---|
-| `GET` | `/users` | Lista todos os usuários | Público |
-| `GET` | `/users?role={role}` | Lista usuários por role | Público |
-| `GET` | `/users?sortDir=ASC\|DESC` | Lista usuários ordenados por nome | Público |
-| `GET` | `/users/{id}` | Busca usuário por ID | Público |
-| `POST` | `/users` | Cria novo usuário (fluxo legado) | Público |
-| `POST` | `/users/login` | Login por telefone + uuid (iOS) ou e-mail + senha (legado) | Público |
-| `POST` | `/users/confirm` | Confirma código e retorna usuário (iOS) | Público |
-| `PUT` | `/users/{id}` | Atualiza nome e descrição do perfil (iOS) | Público |
-| `PATCH` | `/users/{id}` | Atualiza nome do usuário (legado) | Autenticado (próprio usuário ou ADMIN) |
-| `DELETE` | `/users/{id}` | Remove usuário | ADMIN |
-| `PUT` | `/users/{id}/roles/{role}` | Adiciona role ao usuário | ADMIN |
-
-##### Criar usuário — `POST /users` (legado)
 ```json
 {
   "email": "usuario@email.com",
@@ -215,59 +191,94 @@ O fluxo clássico usa **e-mail + senha + JWT Bearer Token**.
   "name": "Nome do Usuário"
 }
 ```
-- Resultado esperado: `201 Created`
-- A role `USER` é atribuída automaticamente.
 
-##### Login por telefone — `POST /users/login` (iOS)
+Resultado esperado: `201 Created`
+
+---
+
+#### 3.2 Login com e-mail e senha
+
+```http
+POST /users/login
+```
+
+Body:
+
 ```json
 {
-  "phone": "11999999999",
-  "uuid": "uuid-dispositivo"
+  "email": "admin@authserver.com",
+  "password": "admin"
 }
 ```
-- `200 OK` → usuário já cadastrado e ativo, retorna `BackendUserResponse`
-- `202 Accepted` → código de confirmação enviado via log (`FakeSms`)
 
-##### Confirmar código — `POST /users/confirm` (iOS)
+Resultado esperado: `200 OK`
+
+Resposta esperada:
+
 ```json
 {
-  "phone": "11999999999",
-  "uuid": "uuid-dispositivo",
-  "code": "123456"
+  "token": "...",
+  "user": {
+    "id": 1,
+    "name": "Admin"
+  }
 }
 ```
-- `200 OK` → cria/atualiza o usuário e retorna `BackendUserResponse`
-- `404 Not Found` → nenhum código pendente para `phone + uuid`
-- `400 Bad Request` → código inválido ou expirado
 
-##### Atualizar perfil — `PUT /users/{id}` (iOS)
-```json
-{
-  "name": "Ricardo",
-  "description": "texto opcional",
-  "phone": null
-}
+Após o login, copie o token retornado e atualize a variável `token`. Nos endpoints protegidos, use o header:
+
+```http
+Authorization: Bearer {{token}}
 ```
-- `200 OK` → mesmo formato de `BackendUserResponse`
 
-##### Atualizar nome — `PATCH /users/{id}` (legado)
+| Perfil | Expiração do token |
+|---|---|
+| Usuário comum | 48 horas |
+| ADMIN | 1 hora |
+
+---
+
+### 4. Usuários
+
+| Método | Endpoint | Descrição | Acesso |
+|---|---|---|---|
+| `GET` | `/users` | Lista usuários ativos | Público |
+| `GET` | `/users?role=ADMIN` | Filtra usuários por role | Público |
+| `GET` | `/users?sortDir=ASC\|DESC` | Lista usuários ordenados por nome | Público |
+| `GET` | `/users/{id}` | Busca usuário por ID | Público |
+| `POST` | `/users` | Cria novo usuário (legado) | Público |
+| `POST` | `/users/login` | Login por telefone+UUID (iOS) ou e-mail+senha (legado) | Público |
+| `POST` | `/users/confirm` | Confirma código e retorna usuário (iOS) | Público |
+| `PUT` | `/users/{id}` | Atualiza perfil — name, description, phone, photoUrl (iOS) | Público |
+| `PATCH` | `/users/{id}` | Atualiza nome do usuário (legado) | Autenticado (próprio usuário ou ADMIN) |
+| `PUT` | `/users/{id}/roles/{role}` | Adiciona role ao usuário | ADMIN |
+| `DELETE` | `/users/{id}` | Remove usuário | ADMIN |
+
+#### 4.1 Atualizar nome do usuário — fluxo legado
+
+```http
+PATCH /users/{{userId}}
+```
+
+Headers:
+
+```http
+Authorization: Bearer {{token}}
+Content-Type: application/json
+```
+
+Body:
+
 ```json
 {
   "name": "Novo Nome"
 }
 ```
 
-##### Resposta legada de usuário — `UserResponse`
-```json
-{
-  "id": 1,
-  "email": "usuario@email.com",
-  "name": "Nome do Usuário",
-  "roles": ["USER"]
-}
-```
+---
 
-#### Roles (`/roles`)
+### 5. Roles
+
 Todos os endpoints de roles exigem autenticação com perfil **ADMIN**.
 
 | Método | Endpoint | Descrição |
@@ -275,38 +286,195 @@ Todos os endpoints de roles exigem autenticação com perfil **ADMIN**.
 | `POST` | `/roles` | Cria nova role |
 | `GET` | `/roles` | Lista todas as roles |
 
-##### Criar role — `POST /roles`
+#### 5.1 Criar role
+
+```http
+POST /roles
+```
+
+Headers:
+
+```http
+Authorization: Bearer {{token}}
+Content-Type: application/json
+```
+
+Body:
+
 ```json
 {
   "name": "MODERATOR",
   "description": "Moderador de conteúdo"
 }
 ```
-- Resultado esperado: `201 Created`
+
+Resultado esperado: `201 Created`
 
 ---
-## 📅 Endpoints — Eventos (`/events`)
 
----
-## 🏷️ Endpoints — Roles (`/roles`)
-Todos os endpoints de roles exigem autenticação com perfil **ADMIN**.
+### 6. Apostas — Bets
+
+Os endpoints de apostas representam o fluxo principal do app RDV WODBet. Todos são públicos.
 
 | Método | Endpoint | Descrição |
 |---|---|---|
-| `POST` | `/roles` | Cria nova role |
-| `GET` | `/roles` | Lista todas as roles |
+| `GET` | `/bets` | Lista apostas ordenadas por createdAt DESC |
+| `GET` | `/bets/{id}` | Busca aposta por ID |
+| `POST` | `/bets` | Cria nova aposta |
+| `PUT` | `/bets/{id}/vote` | Registra ou atualiza voto em atleta |
+| `PUT` | `/bets/{id}/winner` | Propõe vencedor |
+| `PUT` | `/bets/{id}/confirm` | Confirma vencedor proposto |
+| `PUT` | `/bets/{id}/reject` | Rejeita vencedor e marca como disputa |
+| `PUT` | `/bets/{id}/cancel` | Cancela aposta |
+| `PUT` | `/bets/{id}/result` | Atualiza resultados e finaliza aposta |
 
-### Criar role — `POST /roles`
+#### 6.1 Criar aposta
+
+```http
+POST /bets
+```
+
+Body:
+
 ```json
 {
-  "name": "MODERATOR",
-  "description": "Moderador de conteúdo"
+  "createdByUserId": "1",
+  "athleteAUserId": "2",
+  "athleteBUserId": "3",
+  "wodTitle": "Fran 21-15-9",
+  "prizeType": "gatorade",
+  "prizeOtherDescription": null,
+  "expiresAt": "2026-12-31T23:59:00Z"
 }
 ```
----
-## 📅 Endpoints — Eventos (`/events`)
 
-### Tabela no banco: `events`
+Resultado esperado: `201 Created`
+
+Valores aceitos para `prizeType`:
+
+| Valor | Descrição |
+|---|---|
+| `water` | Água |
+| `gatorade` | Gatorade |
+| `beer` | Cerveja |
+| `shake` | Shake |
+| `other` | Outro — campo `prizeOtherDescription` obrigatório |
+
+Após criar, copie o `id` retornado e atualize a variável `betId`.
+
+Status possíveis de uma aposta:
+
+| Status | Descrição |
+|---|---|
+| `open` | Aposta em aberto |
+| `finished` | Finalizada com vencedor confirmado |
+| `canceled` | Cancelada pelo criador |
+| `disputed` | Vencedor rejeitado por um dos atletas |
+| `expired` | expiresAt ultrapassado sem finalização |
+
+#### 6.2 Votar em atleta
+
+```http
+PUT /bets/{{betId}}/vote
+```
+
+Body:
+
+```json
+{
+  "voterUserId": "1",
+  "votedAthleteUserId": "2"
+}
+```
+
+Permitido apenas em apostas com status `open` ou `disputed`. Voto anterior do mesmo usuário é substituído.
+
+#### 6.3 Propor vencedor
+
+```http
+PUT /bets/{{betId}}/winner
+```
+
+Body:
+
+```json
+{
+  "requesterUserId": "1",
+  "proposedWinnerUserId": "2"
+}
+```
+
+#### 6.4 Confirmar vencedor
+
+```http
+PUT /bets/{{betId}}/confirm
+```
+
+Body:
+
+```json
+{
+  "confirmerUserId": "2"
+}
+```
+
+Apenas os atletas da aposta podem confirmar. Quando os dois confirmam o mesmo vencedor, a aposta é finalizada com `status = finished`.
+
+#### 6.5 Rejeitar vencedor
+
+```http
+PUT /bets/{{betId}}/reject
+```
+
+Body:
+
+```json
+{
+  "rejectorUserId": "2"
+}
+```
+
+Altera a aposta para `status = disputed` e limpa o vencedor proposto.
+
+#### 6.6 Cancelar aposta
+
+```http
+PUT /bets/{{betId}}/cancel
+```
+
+Body:
+
+```json
+{
+  "requesterUserId": "1"
+}
+```
+
+Apenas o criador pode cancelar. Não é possível cancelar apostas `finished`, `canceled` ou `expired`.
+
+#### 6.7 Atualizar resultado
+
+```http
+PUT /bets/{{betId}}/result
+```
+
+Body:
+
+```json
+{
+  "requesterUserId": "1",
+  "athleteAResult": "5:30",
+  "athleteBResult": "6:10",
+  "winnerUserId": "2"
+}
+```
+
+Atualiza os resultados dos atletas, define o vencedor e finaliza a aposta diretamente.
+
+---
+
+### 7. Eventos
+
 | Método | Endpoint | Descrição | Acesso |
 |---|---|---|---|
 | `POST` | `/events` | Cria novo evento | Autenticado |
@@ -318,30 +486,32 @@ Todos os endpoints de roles exigem autenticação com perfil **ADMIN**.
 | `DELETE` | `/events/{eventId}/participants/{participantId}` | Remove participante do evento | ADMIN |
 | `GET` | `/events/{eventId}/participants` | Lista participantes do evento | Público |
 
-### Filtros e ordenação — `GET /events`
+#### Filtros disponíveis — `GET /events`
+
 | Parâmetro | Tipo | Descrição | Exemplo |
 |---|---|---|---|
 | `name` | string | Filtra por nome (parcial, case-insensitive) | `name=java` |
-| `status` | enum | Filtra por status | `status=SCHEDULED` |
+| `status` | enum | `SCHEDULED` \| `CANCELLED` \| `FINISHED` | `status=SCHEDULED` |
 | `location` | string | Filtra por local (parcial, case-insensitive) | `location=curitiba` |
 | `startDate` | ISO datetime | Eventos a partir desta data | `startDate=2026-01-01T00:00:00` |
 | `endDate` | ISO datetime | Eventos até esta data | `endDate=2026-12-31T23:59:59` |
-| `sortBy` | string | Campo de ordenação (`name`, `eventDate`, `createdAt`, `location`) | `sortBy=eventDate` |
-| `direction` | string | Direção da ordenação (`ASC` ou `DESC`) | `direction=ASC` |
+| `sortBy` | string | `name` \| `eventDate` \| `createdAt` \| `location` | `sortBy=eventDate` |
+| `direction` | string | `ASC` \| `DESC` | `direction=ASC` |
 
-**Exemplo completo:**
-```
+Exemplo completo:
+
+```http
 GET /events?name=java&status=SCHEDULED&location=curitiba&sortBy=eventDate&direction=ASC
 ```
 
-### Status do evento
-| Status | Descrição |
-|---|---|
-| `SCHEDULED` | Evento agendado (padrão) |
-| `CANCELLED` | Evento cancelado |
-| `FINISHED` | Evento finalizado |
+#### Criar evento
 
-### Criar evento — `POST /events`
+```http
+POST /events
+```
+
+Body:
+
 ```json
 {
   "name": "Java Summit 2026",
@@ -351,29 +521,44 @@ GET /events?name=java&status=SCHEDULED&location=curitiba&sortBy=eventDate&direct
   "status": "SCHEDULED"
 }
 ```
-### Atualizar evento — `PATCH /events/{id}`
-Todos os campos são opcionais:
+
+#### Atualizar evento
+
+```http
+PATCH /events/{{eventId}}
+```
+
+Body (todos os campos são opcionais):
+
 ```json
 {
-  "name": "Novo Nome",
+  "name": "Novo Nome do Evento",
   "location": "São Paulo, SP",
   "status": "CANCELLED"
 }
 ```
----
-## 👥 Endpoints — Participantes (`/participants`)
 
-### Tabela no banco: `participants`
+---
+
+### 8. Participantes
+
 | Método | Endpoint | Descrição | Acesso |
 |---|---|---|---|
 | `POST` | `/participants` | Cria novo participante | Autenticado |
-| `GET` | `/participants` | Lista todos os participantes | Público |
-| `GET` | `/participants?sortDir=ASC\|DESC` | Lista participantes ordenados por nome | Público |
+| `GET` | `/participants` | Lista participantes ordenados por nome (ASC) | Público |
+| `GET` | `/participants?sortDir=DESC` | Lista participantes em ordem decrescente | Público |
 | `GET` | `/participants/{id}` | Busca participante por ID | Público |
 | `PATCH` | `/participants/{id}` | Atualiza dados do participante | Autenticado |
 | `DELETE` | `/participants/{id}` | Remove participante | ADMIN |
 
-### Criar participante — `POST /participants`
+#### Criar participante
+
+```http
+POST /participants
+```
+
+Body:
+
 ```json
 {
   "name": "João Silva",
@@ -381,14 +566,65 @@ Todos os campos são opcionais:
   "phone": "(41) 99999-0000"
 }
 ```
-### Atualizar participante — `PATCH /participants/{id}`
-Todos os campos são opcionais:
+
+#### Atualizar participante
+
+```http
+PATCH /participants/{{participantId}}
+```
+
+Body (todos os campos são opcionais):
+
 ```json
 {
   "name": "João Santos",
   "phone": "(41) 98888-1111"
 }
 ```
+
+---
+
+### 9. Ordem recomendada de execução dos testes
+
+Para validar o backend completo, execute a collection nesta ordem:
+
+```text
+1.  Login por telefone
+2.  Confirmar código
+3.  Login direto após confirmação
+4.  Atualizar perfil iOS
+5.  Criar usuário legado
+6.  Login legado para obter JWT
+7.  Listar usuários
+8.  Buscar usuário por ID
+9.  Criar aposta
+10. Listar apostas
+11. Buscar aposta por ID
+12. Votar em atleta
+13. Propor vencedor
+14. Confirmar vencedor com atleta A
+15. Confirmar vencedor com atleta B
+16. Criar role
+17. Listar roles
+18. Criar participante
+19. Listar participantes
+20. Criar evento
+21. Listar eventos
+22. Associar participante ao evento
+23. Listar participantes do evento
+24. Atualizar evento
+25. Atualizar participante
+```
+
+Para testar cenários alternativos de apostas, crie novas apostas e execute separadamente:
+
+```text
+- Rejeitar vencedor  → status: disputed
+- Cancelar aposta    → status: canceled
+- Atualizar resultado → status: finished (via resultado direto)
+```
+
+> ⚠️ Esses fluxos alteram o status da aposta e podem impedir novas operações sobre a mesma aposta.
 ---
 ## 📋 Regras de Negócio
 ### Usuários
