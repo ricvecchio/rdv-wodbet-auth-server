@@ -11,6 +11,8 @@ interface UserRepository : JpaRepository<User, Long> {
     fun findByPhone(phone: String): User?
     fun findByPhoneAndUuid(phone: String, uuid: String): User?
 
+    fun findAllByActiveTrueOrderByNameAsc(): List<User>
+
     @Query(
         """
             select distinct u from User u

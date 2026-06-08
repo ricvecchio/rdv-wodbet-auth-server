@@ -37,6 +37,8 @@ class UserService(
         SortDir.DESC -> repository.findAll(Sort.by("name").descending())
     }
 
+    fun findActiveUsers() = repository.findAllByActiveTrueOrderByNameAsc()
+
     fun findByIdOrNull(id: Long) = repository.findByIdOrNull(id)
     fun findById(id: Long) = repository.findByIdOrNull(id) ?: throw NotFoundException(id)
 
@@ -122,13 +124,14 @@ class UserService(
     }
 
     /**
-     * Updates user profile (name, description). Phone field from request is intentionally ignored
-     * to avoid accidental overwrites.
+     * Updates user profile (name, description, phone, photoUrl).
      */
-    fun updateProfile(id: Long, name: String?, description: String?): User {
+    fun updateProfile(id: Long, name: String?, description: String?, phone: String?, photoUrl: String?): User {
         val user = findById(id)
         if (!name.isNullOrBlank()) user.name = name
         if (description != null) user.description = description
+        if (phone != null) user.phone = normalizePhone(phone)
+        if (photoUrl != null) user.photoUrl = photoUrl
         return repository.save(user)
     }
 

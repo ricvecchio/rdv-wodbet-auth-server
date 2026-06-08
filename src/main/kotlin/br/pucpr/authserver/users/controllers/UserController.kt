@@ -3,8 +3,8 @@ package br.pucpr.authserver.users.controllers
 import br.pucpr.authserver.exceptions.ForbiddenException
 import br.pucpr.authserver.security.UserToken
 import br.pucpr.authserver.users.dtos.requests.CreateUserRequest
+import br.pucpr.authserver.users.dtos.requests.LoginRequest
 import br.pucpr.authserver.users.dtos.requests.PhoneConfirmRequest
-import br.pucpr.authserver.users.dtos.requests.PhoneLoginRequest
 import br.pucpr.authserver.users.dtos.requests.UpdateUserProfileRequest
 import br.pucpr.authserver.users.dtos.requests.UpdateUserRequest
 import br.pucpr.authserver.users.dtos.responses.BackendUserResponse
@@ -33,7 +33,8 @@ class UserController(val service: UserService) {
         @RequestParam role: String? = null
     ): ResponseEntity<List<UserResponse>> {
         val users = if (role != null) service.findByRole(role)
-        else service.findAll(SortDir.find(sortDir ?: "ASC"))
+        else if (sortDir == null) service.findActiveUsers()
+        else service.findAll(SortDir.find(sortDir))
         return users.map { UserResponse(it) }.let { ResponseEntity.ok(it) }
     }
 
@@ -51,15 +52,21 @@ class UserController(val service: UserService) {
      * HTTP 202 → confirmation code sent (no body)
      */
     @PostMapping("/login")
-    @Operation(summary = "Login por telefone", description = "Autentica por telefone + uuid. Retorna usuário (200) ou envia código (202).")
-    fun phoneLogin(
-        @Valid @RequestBody request: PhoneLoginRequest
+    @Operation(summary = "Login", description = "Autentica por telefone + uuid (iOS) ou e-mail + senha (legado).")
+    fun login(
+        @RequestBody request: LoginRequest
     ): ResponseEntity<*> {
-        val user = service.phoneLogin(request.phone!!, request.uuid!!)
-        return if (user != null) {
-            ResponseEntity.ok(BackendUserResponse(user))
-        } else {
-            ResponseEntity.status(HttpStatus.ACCEPTED).build<Void>()
+        return when {
+            !request.email.isNullOrBlank() && !request.password.isNullOrBlank() ->
+                ResponseEntity.ok(service.login(request.email!!, request.password!!))
+
+            !request.phone.isNullOrBlank() && !request.uuid.isNullOrBlank() -> {
+                val user = service.phoneLogin(request.phone!!, request.uuid!!)
+                if (user != null) ResponseEntity.ok(BackendUserResponse(user))
+                else ResponseEntity.status(HttpStatus.ACCEPTED).build<Void>()
+            }
+
+            else -> throw IllegalArgumentException("Invalid login payload")
         }
     }
 
@@ -93,9 +100,13 @@ class UserController(val service: UserService) {
         @PathVariable id: Long,
         @RequestBody request: UpdateUserProfileRequest
     ): ResponseEntity<BackendUserResponse> {
-        val user = service.updateProfile(id, request.name, request.description)
+        val user = service.updateProfile(id, request.name, request.description, request.phone, request.photoUrl)
         return ResponseEntity.ok(BackendUserResponse(user))
     }
+
+    @GetMapping("/{id}/raw")
+    fun getRawById(@PathVariable id: Long): ResponseEntity<UserResponse> =
+        ResponseEntity.ok(UserResponse(service.findById(id)))
 
     @PreAuthorize("permitAll()")
     @SecurityRequirement(name = "jwt-auth")

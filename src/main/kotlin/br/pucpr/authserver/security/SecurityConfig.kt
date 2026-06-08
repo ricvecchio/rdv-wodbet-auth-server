@@ -40,6 +40,7 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.POST, "/users/login").permitAll()
                     .requestMatchers(HttpMethod.POST, "/users/confirm").permitAll()
                     .requestMatchers(HttpMethod.PUT, "/users/{id}").permitAll()
+                    .requestMatchers("/bets/**").permitAll()
                     .requestMatchers("/h2-console/**").permitAll()
                     .anyRequest().authenticated()
             }
