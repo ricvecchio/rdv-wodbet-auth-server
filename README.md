@@ -628,17 +628,49 @@ Para testar cenários alternativos de apostas, crie novas apostas e execute sepa
 
 ---
 
-## 🧪 Fluxo Oficial de Testes pelo Insomnia
+## 🧪 Testes da API pelo Insomnia
 
-> Execute os endpoints exatamente nesta ordem para evitar erros de dependência entre entidades.
->
-> Ambiente:
->
-> ```json
-> {
->   "baseUrl": "http://localhost:8080"
-> }
-> ```
+Collection: **RDV WODBet Auth Server — Ordem Corrigida**
+
+### Environment
+
+Configure o ambiente `Local` no Insomnia com as variáveis abaixo. Os valores devem ser preenchidos conforme a execução dos testes.
+
+```json
+{
+  "baseUrl": "",
+  "token": "",
+  "adminToken": "",
+  "adminEmail": "",
+  "adminPassword": "",
+  "legacyEmail": "",
+  "legacyPassword": "",
+  "legacyName": "",
+  "phone": "",
+  "uuid": "",
+  "alternateUuid": "",
+  "code": "",
+  "userId": "",
+  "athleteAId": "",
+  "athleteBId": "",
+  "betId": "",
+  "betIdFinish": "",
+  "betIdReject": "",
+  "betIdCancel": "",
+  "betIdResult": "",
+  "eventId": "",
+  "participantId": "",
+  "roleName": ""
+}
+```
+
+Sugestão para execução local:
+
+```json
+{
+  "baseUrl": "http://localhost:8080"
+}
+```
 
 ---
 

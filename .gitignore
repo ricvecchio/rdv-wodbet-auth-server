@@ -39,3 +39,4 @@ out/
 
 ### Kotlin ###
 .kotlin
+!/rdv-wodbet-auth-server.insomnia.yaml

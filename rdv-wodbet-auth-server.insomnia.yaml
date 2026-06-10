@@ -1530,24 +1530,24 @@ environments:
   meta:
     id: env_0c5c50c9cb8a41259bb97098511eb559
     created: 1781120295306
-    modified: 1781121831932
+    modified: 1781123685494
     isPrivate: false
   data:
     baseUrl: http://localhost:8080
     token: ""
-    adminToken: eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3ODExMjE2MTYsImV4cCI6MTc4MTEyNTIxNiwiaXNzIjoiUFVDUFIgQXV0aFNlcnZlciIsInN1YiI6IjEiLCJ1c2VyIjp7ImlkIjoxLCJuYW1lIjoiQWRtaW5pc3RyYWRvciIsInJvbGVzIjpbIkFETUlOIl19fQ.ZrXpVx8RypnZE94OzA5RIJdpHky5rL-zmwBmkUzEB3M
-    adminEmail: admin@authserver.com
-    adminPassword: admin
+    adminToken: ""
+    adminEmail: ""
+    adminPassword: ""
     legacyEmail: usuario@email.com
     legacyPassword: Senha@123
-    legacyName: Usuário Teste
+    legacyName: ""
     phone: "11999999999"
     uuid: uuid-dispositivo-teste
     alternateUuid: uuid-dispositivo-alternativo
     code: ""
-    userId: "3"
-    athleteAId: "2"
-    athleteBId: "3"
+    userId: ""
+    athleteAId: ""
+    athleteBId: ""
     betId: ""
     betIdFinish: ""
     betIdReject: ""
@@ -1555,5 +1555,5 @@ environments:
     betIdResult: ""
     eventId: ""
     participantId: ""
-    roleName: MODERATOR_TESTE
+    roleName: ""
   color: "#7d69cb"
