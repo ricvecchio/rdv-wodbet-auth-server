@@ -639,28 +639,38 @@ Configure o ambiente `Local` no Insomnia com as variáveis abaixo. Os valores de
 ```json
 {
   "baseUrl": "http://localhost:8080",
+
   "token": "",
   "adminToken": "",
-  "adminEmail": "",
-  "adminPassword": "",
+
+  "adminEmail": "admin@authserver.com",
+  "adminPassword": "admin",
+
   "legacyEmail": "usuario@email.com",
   "legacyPassword": "Senha@123",
-  "legacyName": "",
+  "legacyName": "Usuário Teste",
+
   "phone": "11999999999",
   "uuid": "uuid-dispositivo-teste",
   "alternateUuid": "uuid-dispositivo-alternativo",
+
   "code": "",
+
   "userId": "",
+
   "athleteAId": "",
   "athleteBId": "",
+
   "betId": "",
   "betIdFinish": "",
   "betIdReject": "",
   "betIdCancel": "",
   "betIdResult": "",
+
   "eventId": "",
   "participantId": "",
-  "roleName": ""
+
+  "roleName": "MODERATOR_TESTE_01"
 }
 ```
 
@@ -969,55 +979,228 @@ Configure o ambiente `Local` no Insomnia com as variáveis abaixo. Os valores de
 
 ### 09 — ADMIN opcional
 
-> ⚠️ Antes de iniciar: execute o item **50** e copie o JWT retornado para a variável `token`.
+> ⚠️ Os endpoints deste grupo utilizam a variável `adminToken`.
+>
+> Antes de executar os itens 51 a 57, execute obrigatoriamente o item **50** e copie o JWT retornado para:
+>
+> ```json
+> "adminToken": "JWT_RETORNADO_NO_LOGIN_ADMIN"
+> ```
 
 #### 50 — Login ADMIN e-mail + senha
 
-`POST /users/login` → `200 OK`
+```http
+POST {{ _.baseUrl }}/users/login
+```
+
+Body:
+
+```json
+{
+  "email": "{{ _.adminEmail }}",
+  "password": "{{ _.adminPassword }}"
+}
+```
+
+Retorno esperado:
+
+```json
+{
+  "token": "jwt-admin",
+  "user": {
+    "id": 1,
+    "email": "admin@authserver.com",
+    "roles": ["ADMIN"]
+  }
+}
+```
+
+> ⚠️ Copiar o JWT retornado e colar na variável `adminToken`.
+
+---
 
 #### 51 — Criar role
 
-`POST /roles`
+```http
+POST {{ _.baseUrl }}/roles
+```
 
-Header: `Authorization: Bearer {{token}}`
+Headers:
 
-Retorno: `201 Created` ou `200 OK`
+```http
+Authorization: Bearer {{ _.adminToken }}
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "name": "MODERATOR_TESTE_01",
+  "description": "Moderador de conteúdo"
+}
+```
+
+Retorno esperado: `201 Created` ou `200 OK`
+
+> Se a role já existir, altere o valor de `name`.
+
+---
 
 #### 52 — Listar roles
 
-`GET /roles`
+```http
+GET {{ _.baseUrl }}/roles
+```
 
-Header: `Authorization: Bearer {{token}}`
+Headers:
 
-Retorno: `200 OK`
+```http
+Authorization: Bearer {{ _.adminToken }}
+```
+
+Retorno esperado:
+
+```json
+[
+  { "id": 1, "name": "ADMIN" },
+  { "id": 2, "name": "USER" }
+]
+```
+
+Status: `200 OK`
+
+---
 
 #### 53 — Adicionar role ADMIN ao usuário
 
-`PUT /users/{userId}/roles/ADMIN`
+```http
+PUT {{ _.baseUrl }}/users/{{ _.userId }}/roles/ADMIN
+```
 
-Header: `Authorization: Bearer {{token}}`
+Headers:
 
-Retorno: `204 No Content` ou `200 OK`
+```http
+Authorization: Bearer {{ _.adminToken }}
+```
+
+Exemplo: `PUT /users/3/roles/ADMIN`
+
+Retorno esperado: `204 No Content`
+
+> A variável `userId` precisa estar preenchida com um usuário existente.
+
+---
 
 #### 54 — Remover participante do evento
 
-`DELETE /events/{eventId}/participants/{participantId}`
+```http
+DELETE {{ _.baseUrl }}/events/{{ _.eventId }}/participants/{{ _.participantId }}
+```
 
-> Pré-requisito: executar os itens **18**, **23** e **28** antes.
+Headers:
 
-Retorno: `204 No Content`
+```http
+Authorization: Bearer {{ _.adminToken }}
+```
+
+Pré-requisitos:
+
+- Item **18** — Criar participante
+- Item **23** — Criar evento
+- Item **28** — Associar participante ao evento
+
+Variáveis obrigatórias: `eventId` e `participantId` preenchidos.
+
+Retorno esperado: `204 No Content`
+
+---
 
 #### 55 — Remover evento
 
-`DELETE /events/{eventId}` → `204 No Content`
+```http
+DELETE {{ _.baseUrl }}/events/{{ _.eventId }}
+```
+
+Headers:
+
+```http
+Authorization: Bearer {{ _.adminToken }}
+```
+
+Variável obrigatória: `eventId` preenchido.
+
+Retorno esperado: `204 No Content`
+
+---
 
 #### 56 — Remover participante
 
-`DELETE /participants/{participantId}` → `204 No Content`
+```http
+DELETE {{ _.baseUrl }}/participants/{{ _.participantId }}
+```
+
+Headers:
+
+```http
+Authorization: Bearer {{ _.adminToken }}
+```
+
+Variável obrigatória: `participantId` preenchido.
+
+Retorno esperado: `204 No Content`
+
+---
 
 #### 57 — Remover usuário
 
-`DELETE /users/{userId}` → `204 No Content`
+```http
+DELETE {{ _.baseUrl }}/users/{{ _.userId }}
+```
+
+Headers:
+
+```http
+Authorization: Bearer {{ _.adminToken }}
+```
+
+Variável obrigatória: `userId` preenchido.
+
+Retorno esperado: `204 No Content`
+
+---
+
+### 📌 Observações Importantes para o Insomnia
+
+#### Variáveis preenchidas manualmente durante os testes
+
+| Variável | Origem |
+|---|---|
+| `token` | Item 02 ou 05 |
+| `adminToken` | Item 50 |
+| `userId` | Item 05 |
+| `participantId` | Item 18 |
+| `eventId` | Item 23 |
+| `betId` | Item 31 |
+| `betIdFinish` | Item 34 |
+| `betIdReject` | Item 39 |
+| `betIdCancel` | Item 42 |
+| `betIdResult` | Item 44 |
+
+#### Ordem recomendada de execução
+
+```text
+00 — Preparação sem erro
+01 — Fluxo iOS: telefone + UUID
+02 — Usuários
+03 — Participantes
+04 — Eventos
+05 — Apostas: consultas e criação
+06 — Apostas: finalizar por confirmação dupla
+07 — Apostas: fluxos alternativos
+08 — Cenários de erro iOS
+09 — ADMIN opcional
+```
 
 ---
 
