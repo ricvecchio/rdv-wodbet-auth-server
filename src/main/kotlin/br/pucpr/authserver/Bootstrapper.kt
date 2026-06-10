@@ -23,24 +23,25 @@ class Bootstrapper(
     val environment: Environment
 ) : ApplicationListener<ContextRefreshedEvent> {
     override fun onApplicationEvent(event: ContextRefreshedEvent) {
-        if (!environment.activeProfiles.any { it.equals("local", true) || it.equals("dev", true) }) return
-
+        // ── Roles e admin padrão: executado em QUALQUER perfil ──────────────────
         rolesRepository.findByName("USER") ?: rolesRepository
             .save(Role(name = "USER", description = "Standard user"))
         val adminRole =
             rolesRepository.findByName("ADMIN") ?: rolesRepository
                 .save(Role(name = "ADMIN", description = "System Administrator"))
 
-        if (userRepository.findByRole("ADMIN").isEmpty()) {
+        if (userRepository.findByEmail("admin@authserver.com") == null) {
             val admin = User(
                 email = "admin@authserver.com",
                 password = "admin",
-                name = "Auth Server Administrator",
+                name = "Administrador",
             )
             admin.roles.add(adminRole)
             userRepository.save(admin)
         }
 
+        // ── Seed de atletas e apostas: apenas em local/dev ────────────────────
+        if (!environment.activeProfiles.any { it.equals("local", true) || it.equals("dev", true) }) return
         seedUsersAndBets()
     }
 

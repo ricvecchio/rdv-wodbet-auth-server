@@ -1,0 +1,1559 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: RDV WODBet Auth Server — Ordem Corrigida
+meta:
+  id: wrk_bf5d168f793b48eea67d979fc4c1350f
+  created: 1781120394536
+  modified: 1781120394536
+  description: ""
+collection:
+  - name: 08 — Cenários de erro iOS
+    meta:
+      id: fld_338dbfd236ad4058bb1f18770a7af16c
+      created: 1781120295306
+      modified: 1781120295306
+      sortKey: 800
+      description: ""
+    children:
+      - url: "{{ _.baseUrl }}/users/confirm"
+        name: 46 — Confirmar código inválido — espera 400
+        meta:
+          id: req_084f2aff13574a8ab0dc0ac26fb8651c
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 46
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "phone": "{{ _.phone }}",
+              "uuid": "{{ _.uuid }}",
+              "code": "000000"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users/login"
+        name: 48 — Login telefone sem phone — espera 400
+        meta:
+          id: req_6fb70b26659249599a0a687b20e67f8e
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 48
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "phone": "",
+              "uuid": "{{ _.uuid }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users/login"
+        name: 49 — Login telefone sem uuid — espera 400
+        meta:
+          id: req_79ba6f504abf4145a4967f68e653c7bc
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 49
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "phone": "{{ _.phone }}",
+              "uuid": ""
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users/confirm"
+        name: 47 — Confirmar código inexistente — espera 404
+        meta:
+          id: req_95642ece5f9440b399f373dc243be687
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 47
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "phone": "{{ _.phone }}",
+              "uuid": "uuid-sem-codigo",
+              "code": "123456"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 00 — Preparação sem erro
+    meta:
+      id: fld_37d64948e12b45eaa18abd4fea50d30c
+      created: 1781120295306
+      modified: 1781120295306
+      sortKey: 0
+      description: ""
+    children:
+      - url: "{{ _.baseUrl }}/users"
+        name: 01 — Criar usuário legado
+        meta:
+          id: req_3359bd9f317140c9a916d6c82bb20ab1
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: "Esperado: 201 Created. Cria usuário USER para obter JWT comum."
+          sortKey: 1
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "email": "{{ _.legacyEmail }}",
+              "password": "{{ _.legacyPassword }}",
+              "name": "{{ _.legacyName }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users/login"
+        name: 02 — Login legado e-mail + senha
+        meta:
+          id: req_9885dd8338454322a68830d60ac18d74
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: "Esperado: 200 OK. Copiar token retornado para a variável token."
+          sortKey: 2
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "email": "{{ _.legacyEmail }}",
+              "password": "{{ _.legacyPassword }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 03 — Participantes
+    meta:
+      id: fld_4180f6b45b1847e7bafab7b78192c7f4
+      created: 1781120295306
+      modified: 1781120295306
+      sortKey: 300
+      description: ""
+    children:
+      - url: "{{ _.baseUrl }}/participants/{{ _.participantId }}"
+        name: 22 — Atualizar participante
+        meta:
+          id: req_64fe97e206374690bbbdac9a7e167a66
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 22
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "João Santos",
+              "phone": "(41) 98888-1111"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ _.token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/participants/{{ _.participantId }}"
+        name: 21 — Buscar participante por ID
+        meta:
+          id: req_7695c9bdd0f7408ab74cb8c51d09c56f
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 21
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/participants"
+        name: 19 — Listar participantes
+        meta:
+          id: req_aaab05e65b0b47db9b0cd56016734fcc
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 19
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/participants"
+        name: 18 — Criar participante
+        meta:
+          id: req_aca600c38bd54417adf99ece091de575
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 18
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "João Silva {{$timestamp}}",
+              "email": "joao{{$timestamp}}@email.com",
+              "phone": "(41) 99999-0000"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ _.token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/participants?sortDir=DESC"
+        name: 20 — Listar participantes DESC
+        meta:
+          id: req_be4ba52c995e4a3eb600634c67ca627d
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 20
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 09 — ADMIN opcional
+    meta:
+      id: fld_6a90e88e68cc4dd795882db954c4b96c
+      created: 1781120295306
+      modified: 1781122138830
+      sortKey: 900
+      description: ""
+    children:
+      - url: "{{ _.baseUrl }}/users/{{ _.userId }}"
+        name: 57 — Remover usuário
+        meta:
+          id: req_03e24d405c8041be8d2597451a86bb38
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 57
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.adminToken }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/participants/{{ _.participantId }}"
+        name: 56 — Remover participante
+        meta:
+          id: req_2d2927af1cda4da9a458038d51bccde4
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 56
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.adminToken }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users/{{ _.userId }}/roles/ADMIN"
+        name: 53 — Adicionar role ADMIN ao usuário
+        meta:
+          id: req_386b11c7e3bb4f4ba9ea087b5c236fd6
+          created: 1781120295306
+          modified: 1781121816417
+          isPrivate: false
+          description: ""
+          sortKey: 53
+        method: PUT
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.adminToken }}
+        authentication:
+          type: none
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/events/{{ _.eventId }}"
+        name: 55 — Remover evento
+        meta:
+          id: req_4e1f9fe24659420cbb6c89e257e3f000
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 55
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.adminToken }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/roles"
+        name: 51 — Criar role
+        meta:
+          id: req_7f2446a1dbf74c868ae34e93925328ea
+          created: 1781120295306
+          modified: 1781121641684
+          isPrivate: false
+          description: Requer adminToken.
+          sortKey: 51.5
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "MODERATOR_TESTE_03",
+              "description": "Moderador de conteúdo"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ _.adminToken }}
+        authentication:
+          type: none
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users/login"
+        name: 50 — Login ADMIN e-mail + senha
+        meta:
+          id: req_8e9fb63462574f96b12aa0b7c94c0dd9
+          created: 1781120295306
+          modified: 1781121608924
+          isPrivate: false
+          description: "Esperado: 200 OK. Copie o token retornado para adminToken."
+          sortKey: 50
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "email": "{{ _.adminEmail }}",
+              "password": "{{ _.adminPassword }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/events/{{ _.eventId }}/participants/{{ _.participantId }}"
+        name: 54 — Remover participante do evento
+        meta:
+          id: req_968dca5a9e814101a6d872ebe4914750
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 54
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.adminToken }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/roles"
+        name: 52 — Listar roles
+        meta:
+          id: req_ce82ec940f4d4f418fcaf811c9724457
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 52
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.adminToken }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 02 — Usuários
+    meta:
+      id: fld_7070a7cc5452406cb484819ca1c1b9fb
+      created: 1781120295306
+      modified: 1781120295306
+      sortKey: 200
+      description: ""
+    children:
+      - url: "{{ _.baseUrl }}/users/{{ _.userId }}"
+        name: 17 — Atualizar nome legado por PATCH — somente próprio usuário do token
+        meta:
+          id: req_00df526453474136a6769007cf8d4e05
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: Pode retornar 403 se userId não for o usuário do token ou se o
+            token não for ADMIN.
+          sortKey: 17
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Novo Nome Legado"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ _.token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users?role=USER"
+        name: 10 — Listar usuários por role USER
+        meta:
+          id: req_5a8a2dd0533147e1b8338d6221d4dc6d
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 10
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users?sortDir=DESC"
+        name: 13 — Listar usuários DESC
+        meta:
+          id: req_67ce635630404a308f17e05b0b29ccee
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 13
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users?role=ADMIN"
+        name: 11 — Listar usuários por role ADMIN
+        meta:
+          id: req_6b7255078b43457fb20a52c79683ae87
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 11
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users/{{ _.userId }}"
+        name: 14 — Buscar usuário por ID
+        meta:
+          id: req_7e6bef8c3d21441da956f6b431dbe69a
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 14
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users/{{ _.userId }}/raw"
+        name: 15 — Buscar usuário RAW por ID
+        meta:
+          id: req_8917649c66e941029228683471cc782c
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 15
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users/{{ _.userId }}"
+        name: 16 — Atualizar perfil iOS por PUT
+        meta:
+          id: req_958063737d624f748a0bbff5bfa62a5e
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 16
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Ricardo Atualizado",
+              "description": "Perfil atualizado via PUT",
+              "phone": null,
+              "photoUrl": null
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users?sortDir=ASC"
+        name: 12 — Listar usuários ASC
+        meta:
+          id: req_a730016654044838936533c5fb0ee955
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 12
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users"
+        name: 09 — Listar usuários ativos
+        meta:
+          id: req_f3ef31276f074bcb94978b5b50ca2d66
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 9
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: "01 — Fluxo iOS: telefone + UUID"
+    meta:
+      id: fld_89710c27b23b454fa94e8168d1528f97
+      created: 1781120295306
+      modified: 1781120295306
+      sortKey: 100
+      description: ""
+    children:
+      - url: "{{ _.baseUrl }}/users/confirm"
+        name: 08 — Confirmar UUID diferente
+        meta:
+          id: req_0bea5a982dc54bfbb419069b81a309e9
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: "Esperado: 200 OK."
+          sortKey: 8
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "phone": "{{ _.phone }}",
+              "uuid": "{{ _.alternateUuid }}",
+              "code": "{{ _.code }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users/login"
+        name: 07 — Login com UUID diferente — espera 202
+        meta:
+          id: req_18ced6216150417580f011be57b41a08
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: "Esperado: 202 Accepted. Copiar novo código do log para code."
+          sortKey: 7
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "phone": "{{ _.phone }}",
+              "uuid": "{{ _.alternateUuid }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users/login"
+        name: 03 — Login por telefone — primeiro acesso espera 202
+        meta:
+          id: req_3610df44c06f4c2ca57f83be9c457659
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: "Esperado: 202 Accepted no primeiro acesso. Copiar código do log
+            FakeSms para code."
+          sortKey: 3
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "phone": "{{ _.phone }}",
+              "uuid": "{{ _.uuid }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users/{{ _.userId }}"
+        name: 06 — Atualizar perfil iOS
+        meta:
+          id: req_6e8ce45d43be4b16882fd097f43bca9f
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: "Esperado: 200 OK."
+          sortKey: 6
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Ricardo",
+              "description": "Atleta e desenvolvedor",
+              "phone": null,
+              "photoUrl": null
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users/login"
+        name: 05 — Login direto após confirmação
+        meta:
+          id: req_ad5c7b7ddc1c414c872b26437def0a8d
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: "Esperado: 200 OK."
+          sortKey: 5
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "phone": "{{ _.phone }}",
+              "uuid": "{{ _.uuid }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/users/confirm"
+        name: 04 — Confirmar código iOS
+        meta:
+          id: req_e2706d22fb5c49e88349450c625ca81b
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: "Esperado: 200 OK. Copiar id retornado para userId."
+          sortKey: 4
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "phone": "{{ _.phone }}",
+              "uuid": "{{ _.uuid }}",
+              "code": "{{ _.code }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: "07 — Apostas: fluxos alternativos"
+    meta:
+      id: fld_8bfbf83f454b4143af8fcb59e91442aa
+      created: 1781120295306
+      modified: 1781120295306
+      sortKey: 700
+      description: ""
+    children:
+      - url: "{{ _.baseUrl }}/bets"
+        name: 42 — Criar aposta para cancelamento
+        meta:
+          id: req_3e3179301c2f4b41afa0dcb3165338dc
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 42
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "createdByUserId": "{{ _.userId }}",
+              "athleteAUserId": "{{ _.athleteAId }}",
+              "athleteBUserId": "{{ _.athleteBId }}",
+              "wodTitle": "Helen - fluxo cancelamento",
+              "prizeType": "gatorade",
+              "prizeOtherDescription": null,
+              "expiresAt": "2026-12-31T23:59:00Z"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/bets/{{ _.betIdCancel }}/cancel"
+        name: 43 — Cancelar aposta
+        meta:
+          id: req_8dec326f9b484a2fa895fe820aa0cd11
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 43
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "requesterUserId": "{{ _.userId }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/bets"
+        name: 44 — Criar aposta para resultado direto
+        meta:
+          id: req_9e3aa2dda7df4a0eb82ebe80db9e970a
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 44
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "createdByUserId": "{{ _.userId }}",
+              "athleteAUserId": "{{ _.athleteAId }}",
+              "athleteBUserId": "{{ _.athleteBId }}",
+              "wodTitle": "Diane - fluxo resultado",
+              "prizeType": "gatorade",
+              "prizeOtherDescription": null,
+              "expiresAt": "2026-12-31T23:59:00Z"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/bets/{{ _.betIdResult }}/result"
+        name: 45 — Atualizar resultado direto
+        meta:
+          id: req_be4c83d2d2f54250b3e110adc537dff8
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 45
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "requesterUserId": "{{ _.userId }}",
+              "athleteAResult": "5:30",
+              "athleteBResult": "6:10",
+              "winnerUserId": "{{ _.athleteAId }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/bets/{{ _.betIdReject }}/winner"
+        name: 40 — Propor vencedor para rejeição
+        meta:
+          id: req_cd05e8d507354bb59913e4954c27f91b
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 40
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "requesterUserId": "{{ _.userId }}",
+              "proposedWinnerUserId": "{{ _.athleteAId }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/bets"
+        name: 39 — Criar aposta para rejeição
+        meta:
+          id: req_daa3e00b651b40519d5a7e3648d926e8
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 39
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "createdByUserId": "{{ _.userId }}",
+              "athleteAUserId": "{{ _.athleteAId }}",
+              "athleteBUserId": "{{ _.athleteBId }}",
+              "wodTitle": "Isabel - fluxo rejeição",
+              "prizeType": "gatorade",
+              "prizeOtherDescription": null,
+              "expiresAt": "2026-12-31T23:59:00Z"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/bets/{{ _.betIdReject }}/reject"
+        name: 41 — Rejeitar vencedor
+        meta:
+          id: req_fe677c1ad02d41bea74855e14f5fd3f5
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 41
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "rejectorUserId": "{{ _.athleteBId }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 04 — Eventos
+    meta:
+      id: fld_b5c750ee59b645629cae0f09682ee127
+      created: 1781120295306
+      modified: 1781120295306
+      sortKey: 400
+      description: ""
+    children:
+      - url: "{{ _.baseUrl }}/events/{{ _.eventId }}/participants"
+        name: 29 — Listar participantes do evento
+        meta:
+          id: req_60010474b4d7412aabecd26e3f8e2556
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 29
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/events/{{ _.eventId }}"
+        name: 27 — Atualizar evento
+        meta:
+          id: req_909668331a8a482485010427973ca989
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 27
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Novo Nome do Evento",
+              "location": "São Paulo, SP",
+              "status": "CANCELLED"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ _.token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/events/{{ _.eventId }}"
+        name: 26 — Buscar evento por ID
+        meta:
+          id: req_96f86796715f46ae8473a795a747425c
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 26
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl
+          }}/events?name=java&status=SCHEDULED&sortBy=eventDate&direction=ASC"
+        name: 25 — Listar eventos com filtros
+        meta:
+          id: req_bbf4531260d64a4ba5ab688d60f4d9d4
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 25
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/events"
+        name: 23 — Criar evento
+        meta:
+          id: req_ceffc957481441fca6adb6dc8ff501e3
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 23
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Java Summit 2026",
+              "description": "Conferência sobre Java e JVM",
+              "location": "Curitiba, PR",
+              "eventDate": "2026-09-15T09:00:00",
+              "status": "SCHEDULED"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ _.token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/events"
+        name: 24 — Listar eventos
+        meta:
+          id: req_e68d41a24f234745b475a2a65ac87b7f
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 24
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/events/{{ _.eventId }}/participants/{{ _.participantId }}"
+        name: 28 — Associar participante ao evento
+        meta:
+          id: req_f3e755ac7ebf4ec086b9f5304570a8dd
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 28
+        method: POST
+        headers:
+          - name: Authorization
+            value: Bearer {{ _.token }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: "05 — Apostas: consultas e criação"
+    meta:
+      id: fld_d61a3ae6eb2545ccb2138f989d7349f0
+      created: 1781120295306
+      modified: 1781120295306
+      sortKey: 500
+      description: ""
+    children:
+      - url: "{{ _.baseUrl }}/bets/{{ _.betId }}"
+        name: 32 — Buscar aposta por ID
+        meta:
+          id: req_621ffda5f85f4e5193cd0a73d88fe726
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 32
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/bets/{{ _.betId }}/vote"
+        name: 33 — Votar em atleta
+        meta:
+          id: req_75c33a51658848388dd10ad4136b399e
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 33
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "voterUserId": "{{ _.userId }}",
+              "votedAthleteUserId": "{{ _.athleteAId }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/bets"
+        name: 30 — Listar apostas
+        meta:
+          id: req_c72b605c9c084b9fab32e6596d20c506
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 30
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/bets"
+        name: 31 — Criar aposta padrão
+        meta:
+          id: req_d98f95d4e6c544cab99de67a344603be
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 31
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "createdByUserId": "{{ _.userId }}",
+              "athleteAUserId": "{{ _.athleteAId }}",
+              "athleteBUserId": "{{ _.athleteBId }}",
+              "wodTitle": "Fran 21-15-9",
+              "prizeType": "gatorade",
+              "prizeOtherDescription": null,
+              "expiresAt": "2026-12-31T23:59:00Z"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: "06 — Apostas: finalizar por confirmação dupla"
+    meta:
+      id: fld_e112a841bdc74d71b0681c79152e47d4
+      created: 1781120295306
+      modified: 1781120295306
+      sortKey: 600
+      description: ""
+    children:
+      - url: "{{ _.baseUrl }}/bets/{{ _.betIdFinish }}/confirm"
+        name: 37 — Confirmar vencedor pelo atleta B
+        meta:
+          id: req_5331428a00544369a1f326cf75c5d88b
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 37
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "confirmerUserId": "{{ _.athleteBId }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/bets"
+        name: 34 — Criar aposta para finalizar
+        meta:
+          id: req_62605eb11e114a0399644e205d54502c
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 34
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "createdByUserId": "{{ _.userId }}",
+              "athleteAUserId": "{{ _.athleteAId }}",
+              "athleteBUserId": "{{ _.athleteBId }}",
+              "wodTitle": "Grace - fluxo finalizar",
+              "prizeType": "gatorade",
+              "prizeOtherDescription": null,
+              "expiresAt": "2026-12-31T23:59:00Z"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/bets/{{ _.betIdFinish }}/confirm"
+        name: 36 — Confirmar vencedor pelo atleta A
+        meta:
+          id: req_a83d8ba9bc16403a9d24b0b1bde15162
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 36
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "confirmerUserId": "{{ _.athleteAId }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/bets/{{ _.betIdFinish }}"
+        name: 38 — Buscar aposta finalizada
+        meta:
+          id: req_b02c72c01c684333abc68870bab4b497
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 38
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.baseUrl }}/bets/{{ _.betIdFinish }}/winner"
+        name: 35 — Propor vencedor
+        meta:
+          id: req_bedcdb078c894ac08bf22c05763a7a1e
+          created: 1781120295306
+          modified: 1781120295306
+          isPrivate: false
+          description: ""
+          sortKey: 35
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "requesterUserId": "{{ _.userId }}",
+              "proposedWinnerUserId": "{{ _.athleteAId }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_06d3ecb452b745d199fd6324cf12130a
+    created: 1781120295306
+    modified: 1781120295306
+environments:
+  name: Local
+  meta:
+    id: env_0c5c50c9cb8a41259bb97098511eb559
+    created: 1781120295306
+    modified: 1781121831932
+    isPrivate: false
+  data:
+    baseUrl: http://localhost:8080
+    token: ""
+    adminToken: eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3ODExMjE2MTYsImV4cCI6MTc4MTEyNTIxNiwiaXNzIjoiUFVDUFIgQXV0aFNlcnZlciIsInN1YiI6IjEiLCJ1c2VyIjp7ImlkIjoxLCJuYW1lIjoiQWRtaW5pc3RyYWRvciIsInJvbGVzIjpbIkFETUlOIl19fQ.ZrXpVx8RypnZE94OzA5RIJdpHky5rL-zmwBmkUzEB3M
+    adminEmail: admin@authserver.com
+    adminPassword: admin
+    legacyEmail: usuario@email.com
+    legacyPassword: Senha@123
+    legacyName: Usuário Teste
+    phone: "11999999999"
+    uuid: uuid-dispositivo-teste
+    alternateUuid: uuid-dispositivo-alternativo
+    code: ""
+    userId: "3"
+    athleteAId: "2"
+    athleteBId: "3"
+    betId: ""
+    betIdFinish: ""
+    betIdReject: ""
+    betIdCancel: ""
+    betIdResult: ""
+    eventId: ""
+    participantId: ""
+    roleName: MODERATOR_TESTE
+  color: "#7d69cb"

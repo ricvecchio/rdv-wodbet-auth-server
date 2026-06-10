@@ -625,7 +625,378 @@ Para testar cenários alternativos de apostas, crie novas apostas e execute sepa
 ```
 
 > ⚠️ Esses fluxos alteram o status da aposta e podem impedir novas operações sobre a mesma aposta.
+
 ---
+
+## 🧪 Fluxo Oficial de Testes pelo Insomnia
+
+> Execute os endpoints exatamente nesta ordem para evitar erros de dependência entre entidades.
+>
+> Ambiente:
+>
+> ```json
+> {
+>   "baseUrl": "http://localhost:8080"
+> }
+> ```
+
+---
+
+### 00 — Preparação sem erro
+
+#### 01 — Criar usuário legado
+
+`POST /users`
+
+**Objetivo:** Criar usuário tradicional (e-mail/senha).
+
+**Retorno esperado:** `201 Created`
+
+```json
+{
+  "name": "Usuário Teste",
+  "email": "usuario@email.com",
+  "password": "Senha@123"
+}
+```
+
+---
+
+#### 02 — Login legado e-mail + senha
+
+`POST /users/login`
+
+**Objetivo:** Gerar JWT do usuário legado.
+
+**Retorno esperado:** `200 OK`
+
+```json
+{
+  "token": "jwt",
+  "user": {}
+}
+```
+
+> ⚠️ **Ação obrigatória:** copie o token retornado para a variável `token`.
+
+---
+
+### 01 — Fluxo iOS: telefone + UUID
+
+#### 03 — Login por telefone (primeiro acesso)
+
+`POST /users/login`
+
+```json
+{
+  "phone": "11999999999",
+  "uuid": "uuid-dispositivo-teste"
+}
+```
+
+**Retorno esperado:** `202 Accepted`
+
+---
+
+#### 04 — Confirmar código iOS
+
+`POST /users/confirm`
+
+```json
+{
+  "phone": "11999999999",
+  "uuid": "uuid-dispositivo-teste",
+  "code": "123456"
+}
+```
+
+**Retorno esperado:** `200 OK`
+
+---
+
+#### 05 — Login direto após confirmação
+
+`POST /users/login`
+
+**Retorno esperado:** `200 OK`
+
+> ⚠️ **Ação obrigatória:** salve o `id` retornado na variável `userId`.
+
+---
+
+#### 06 — Atualizar perfil iOS
+
+`PUT /users/{id}`
+
+**Retorno esperado:** `200 OK`
+
+---
+
+#### 07 — Login com UUID diferente
+
+`POST /users/login`
+
+**Retorno esperado:** `202 Accepted`
+
+---
+
+#### 08 — Confirmar UUID diferente
+
+`POST /users/confirm`
+
+**Retorno esperado:** `200 OK`
+
+---
+
+### 02 — Usuários
+
+#### 09 — Listar usuários ativos
+
+`GET /users` → `200 OK`
+
+#### 10 — Listar usuários USER
+
+`GET /users?role=USER` → `200 OK`
+
+#### 11 — Listar usuários ADMIN
+
+`GET /users?role=ADMIN` → `200 OK`
+
+#### 12 — Listar usuários ASC
+
+`GET /users?sortDir=ASC` → `200 OK`
+
+#### 13 — Listar usuários DESC
+
+`GET /users?sortDir=DESC` → `200 OK`
+
+#### 14 — Buscar usuário por ID
+
+`GET /users/{id}` → `200 OK`
+
+#### 15 — Buscar usuário RAW por ID
+
+`GET /users/{id}/raw` → `200 OK`
+
+#### 16 — Atualizar perfil iOS
+
+`PUT /users/{id}` → `200 OK`
+
+#### 17 — Atualizar nome legado por PATCH
+
+`PATCH /users/{id}` → `200 OK` ou `204 No Content`
+
+---
+
+### 03 — Participantes
+
+#### 18 — Criar participante
+
+`POST /participants` → `201 Created`
+
+> ⚠️ **Ação obrigatória:** salve o `id` retornado na variável `participantId`.
+
+#### 19 — Listar participantes
+
+`GET /participants` → `200 OK`
+
+#### 20 — Listar participantes DESC
+
+`GET /participants?sortDir=DESC` → `200 OK`
+
+#### 21 — Buscar participante por ID
+
+`GET /participants/{id}` → `200 OK`
+
+#### 22 — Atualizar participante
+
+`PATCH /participants/{id}` → `200 OK`
+
+---
+
+### 04 — Eventos
+
+#### 23 — Criar evento
+
+`POST /events` → `201 Created`
+
+> ⚠️ **Ação obrigatória:** salve o `id` retornado na variável `eventId`.
+
+#### 24 — Listar eventos
+
+`GET /events` → `200 OK`
+
+#### 25 — Listar eventos com filtros
+
+`GET /events?name=java&status=SCHEDULED&sortBy=eventDate&direction=ASC` → `200 OK`
+
+#### 26 — Buscar evento por ID
+
+`GET /events/{id}` → `200 OK`
+
+#### 27 — Atualizar evento
+
+`PATCH /events/{id}` → `200 OK`
+
+#### 28 — Associar participante ao evento
+
+`POST /events/{eventId}/participants/{participantId}` → `200 OK`
+
+#### 29 — Listar participantes do evento
+
+`GET /events/{eventId}/participants` → `200 OK`
+
+---
+
+### 05 — Apostas: consultas e criação
+
+#### 30 — Listar apostas
+
+`GET /bets` → `200 OK`
+
+#### 31 — Criar aposta padrão
+
+`POST /bets` → `201 Created`
+
+> ⚠️ **Ação obrigatória:** salve o `id` retornado na variável `betId`.
+
+#### 32 — Buscar aposta por ID
+
+`GET /bets/{id}` → `200 OK`
+
+#### 33 — Votar em atleta
+
+`PUT /bets/{id}/vote` → `200 OK`
+
+---
+
+### 06 — Apostas: finalizar por confirmação dupla
+
+#### 34 — Criar aposta para finalizar
+
+`POST /bets` → `201 Created`
+
+> ⚠️ Salve o `id` na variável `betIdFinish`.
+
+#### 35 — Propor vencedor
+
+`PUT /bets/{id}/winner` → `200 OK`
+
+#### 36 — Confirmar vencedor atleta A
+
+`PUT /bets/{id}/confirm` → `200 OK`
+
+#### 37 — Confirmar vencedor atleta B
+
+`PUT /bets/{id}/confirm` → `200 OK`
+
+#### 38 — Buscar aposta finalizada
+
+`GET /bets/{id}` → `200 OK`
+
+```json
+{ "status": "finished" }
+```
+
+---
+
+### 07 — Apostas: fluxos alternativos
+
+#### 39 — Criar aposta para rejeição
+
+`POST /bets` → `201 Created` — salve na variável `betIdReject`
+
+#### 40 — Propor vencedor para rejeição
+
+`PUT /bets/{id}/winner` → `200 OK`
+
+#### 41 — Rejeitar vencedor
+
+`PUT /bets/{id}/reject` → `200 OK` → `status: disputed`
+
+#### 42 — Criar aposta para cancelamento
+
+`POST /bets` → `201 Created` — salve na variável `betIdCancel`
+
+#### 43 — Cancelar aposta
+
+`PUT /bets/{id}/cancel` → `200 OK` → `status: canceled`
+
+#### 44 — Criar aposta resultado direto
+
+`POST /bets` → `201 Created` — salve na variável `betIdResult`
+
+#### 45 — Atualizar resultado direto
+
+`PUT /bets/{id}/result` → `200 OK` → `status: finished`
+
+---
+
+### 08 — Cenários de erro iOS
+
+| # | Cenário | Retorno esperado |
+|---|---|---|
+| 46 | Confirmar código inválido | `400 Bad Request` |
+| 47 | Confirmar código inexistente | `404 Not Found` |
+| 48 | Login telefone sem `phone` | `400 Bad Request` |
+| 49 | Login telefone sem `uuid` | `400 Bad Request` |
+
+---
+
+### 09 — ADMIN opcional
+
+> ⚠️ Antes de iniciar: execute o item **50** e copie o JWT retornado para a variável `token`.
+
+#### 50 — Login ADMIN e-mail + senha
+
+`POST /users/login` → `200 OK`
+
+#### 51 — Criar role
+
+`POST /roles`
+
+Header: `Authorization: Bearer {{token}}`
+
+Retorno: `201 Created` ou `200 OK`
+
+#### 52 — Listar roles
+
+`GET /roles`
+
+Header: `Authorization: Bearer {{token}}`
+
+Retorno: `200 OK`
+
+#### 53 — Adicionar role ADMIN ao usuário
+
+`PUT /users/{userId}/roles/ADMIN`
+
+Header: `Authorization: Bearer {{token}}`
+
+Retorno: `204 No Content` ou `200 OK`
+
+#### 54 — Remover participante do evento
+
+`DELETE /events/{eventId}/participants/{participantId}`
+
+> Pré-requisito: executar os itens **18**, **23** e **28** antes.
+
+Retorno: `204 No Content`
+
+#### 55 — Remover evento
+
+`DELETE /events/{eventId}` → `204 No Content`
+
+#### 56 — Remover participante
+
+`DELETE /participants/{participantId}` → `204 No Content`
+
+#### 57 — Remover usuário
+
+`DELETE /users/{userId}` → `204 No Content`
+
+---
+
 ## 📋 Regras de Negócio
 ### Usuários
 - **Login por telefone:** o número é normalizado (removendo caracteres não numéricos) antes de buscar/salvar.

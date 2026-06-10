@@ -3,6 +3,7 @@ package br.pucpr.authserver.users.services
 import br.pucpr.authserver.exceptions.BadRequestException
 import br.pucpr.authserver.exceptions.NotFoundException
 import br.pucpr.authserver.exceptions.UnauthorizedException
+import br.pucpr.authserver.roles.entities.Role
 import br.pucpr.authserver.roles.repositories.RoleRepository
 import br.pucpr.authserver.security.Jwt
 import br.pucpr.authserver.users.dtos.responses.LoginResponse
@@ -27,7 +28,7 @@ class UserService(
             throw BadRequestException("User already exists")
         }
         val userRole = roleRepository.findByName("USER")
-            ?: throw BadRequestException("Role USER not found")
+            ?: roleRepository.save(Role(name = "USER", description = "Standard user"))
         user.roles.add(userRole)
         return repository.save(user)
     }
