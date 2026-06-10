@@ -638,17 +638,17 @@ Configure o ambiente `Local` no Insomnia com as variáveis abaixo. Os valores de
 
 ```json
 {
-  "baseUrl": "",
+  "baseUrl": "http://localhost:8080",
   "token": "",
   "adminToken": "",
   "adminEmail": "",
   "adminPassword": "",
-  "legacyEmail": "",
-  "legacyPassword": "",
+  "legacyEmail": "usuario@email.com",
+  "legacyPassword": "Senha@123",
   "legacyName": "",
-  "phone": "",
-  "uuid": "",
-  "alternateUuid": "",
+  "phone": "11999999999",
+  "uuid": "uuid-dispositivo-teste",
+  "alternateUuid": "uuid-dispositivo-alternativo",
   "code": "",
   "userId": "",
   "athleteAId": "",
