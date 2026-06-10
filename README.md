@@ -664,14 +664,6 @@ Configure o ambiente `Local` no Insomnia com as variáveis abaixo. Os valores de
 }
 ```
 
-Sugestão para execução local:
-
-```json
-{
-  "baseUrl": "http://localhost:8080"
-}
-```
-
 ---
 
 ### 00 — Preparação sem erro
