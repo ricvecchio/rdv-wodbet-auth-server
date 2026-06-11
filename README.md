@@ -1,5 +1,5 @@
 # Spring Auth Server
-Servidor de autenticação e autorização baseado em **JWT**, desenvolvido com **Kotlin + Spring Boot**. Permite gerenciar usuários, perfis de acesso, eventos e participantes. Suporta também fluxo de login por **telefone + UUID** (utilizado pelo app iOS).
+Servidor de autenticação e autorização baseado em **JWT**, desenvolvido com **Kotlin + Spring Boot**. Permite gerenciar usuários, perfis de acesso, eventos e participantes. Suporta também fluxo iOS com login por telefone + UUID + confirmação por código.
 
 
 > **Autor:** Ricardo Del Vecchio   
@@ -630,11 +630,25 @@ Para testar cenários alternativos de apostas, crie novas apostas e execute sepa
 
 ## 🧪 Testes da API pelo Insomnia
 
-Collection: **RDV WODBet Auth Server — Ordem Corrigida**
+Use a collection do Insomnia **exatamente na ordem dos endpoints**. Sempre que um endpoint retornar um **ID** ou um **JWT**, copie o valor para a variável correspondente no **Environment**.
+
+Nos fluxos iOS, após executar o login por telefone, consulte o log do backend para capturar o código enviado pelo FakeSMS.
+
+Exemplo de log:
+
+```text
+=== [FakeSMS] Sending confirmation code to phone 11999999999: CODE = 831920 ===
+```
+
+Copie o valor retornado para a variável `code` antes de executar a confirmação:
+
+```json
+{
+  "code": "831920"
+}
+```
 
 ### Environment
-
-Configure o ambiente `Local` no Insomnia com as variáveis abaixo. Os valores devem ser preenchidos conforme a execução dos testes.
 
 ```json
 {
@@ -674,690 +688,162 @@ Configure o ambiente `Local` no Insomnia com as variáveis abaixo. Os valores de
 }
 ```
 
----
-
 ### 00 — Preparação sem erro
 
 #### 01 — Criar usuário legado
 
-`POST /users`
+**POST** `{{ _.baseUrl }}/users`
 
-**Objetivo:** Criar usuário tradicional (e-mail/senha).
+Body:
+
+```json
+{
+  "email": "{{ _.legacyEmail }}",
+  "password": "{{ _.legacyPassword }}",
+  "name": "{{ _.legacyName }}"
+}
+```
 
 **Retorno esperado:** `201 Created`
 
-```json
-{
-  "name": "Usuário Teste",
-  "email": "usuario@email.com",
-  "password": "Senha@123"
-}
-```
-
----
-
 #### 02 — Login legado e-mail + senha
 
-`POST /users/login`
+**POST** `{{ _.baseUrl }}/users/login`
 
-**Objetivo:** Gerar JWT do usuário legado.
+Body:
+
+```json
+{
+  "email": "{{ _.legacyEmail }}",
+  "password": "{{ _.legacyPassword }}"
+}
+```
 
 **Retorno esperado:** `200 OK`
 
-```json
-{
-  "token": "jwt",
-  "user": {}
-}
-```
-
-> ⚠️ **Ação obrigatória:** copie o token retornado para a variável `token`.
-
----
+**Ação obrigatória:** copiar o JWT retornado para a variável `token`.
 
 ### 01 — Fluxo iOS: telefone + UUID
 
-#### 03 — Login por telefone (primeiro acesso)
+#### 03 — Login por telefone — primeiro acesso espera 202
 
-`POST /users/login`
+**POST** `{{ _.baseUrl }}/users/login`
+
+Body:
 
 ```json
 {
-  "phone": "11999999999",
-  "uuid": "uuid-dispositivo-teste"
+  "phone": "{{ _.phone }}",
+  "uuid": "{{ _.uuid }}"
 }
 ```
 
 **Retorno esperado:** `202 Accepted`
 
----
+**Ação obrigatória:** consultar o log do backend, copiar o código do FakeSMS e preencher a variável `code`.
 
 #### 04 — Confirmar código iOS
 
-`POST /users/confirm`
+**POST** `{{ _.baseUrl }}/users/confirm`
+
+Body:
 
 ```json
 {
-  "phone": "11999999999",
-  "uuid": "uuid-dispositivo-teste",
-  "code": "123456"
+  "phone": "{{ _.phone }}",
+  "uuid": "{{ _.uuid }}",
+  "code": "{{ _.code }}"
 }
 ```
 
 **Retorno esperado:** `200 OK`
-
----
 
 #### 05 — Login direto após confirmação
 
-`POST /users/login`
+**POST** `{{ _.baseUrl }}/users/login`
+
+Body:
+
+```json
+{
+  "phone": "{{ _.phone }}",
+  "uuid": "{{ _.uuid }}"
+}
+```
 
 **Retorno esperado:** `200 OK`
 
-> ⚠️ **Ação obrigatória:** salve o `id` retornado na variável `userId`.
+**Ações obrigatórias:**
+- copiar o JWT para `token`;
+- copiar o ID do usuário para `userId`;
+- identificar dois usuários válidos para apostas e preencher `athleteAId` e `athleteBId`.
 
----
+Esses IDs serão utilizados a partir do item 31.
 
 #### 06 — Atualizar perfil iOS
 
-`PUT /users/{id}`
+**PUT** `{{ _.baseUrl }}/users/{{ _.userId }}`
+
+Body:
+
+```json
+{
+  "name": "Ricardo",
+  "description": "Atleta e desenvolvedor",
+  "phone": null,
+  "photoUrl": null
+}
+```
 
 **Retorno esperado:** `200 OK`
 
----
+#### 07 — Login com UUID diferente — espera 202
 
-#### 07 — Login com UUID diferente
+**POST** `{{ _.baseUrl }}/users/login`
 
-`POST /users/login`
+Body:
+
+```json
+{
+  "phone": "{{ _.phone }}",
+  "uuid": "{{ _.alternateUuid }}"
+}
+```
 
 **Retorno esperado:** `202 Accepted`
 
----
+**Ação obrigatória:** consultar novamente o log FakeSMS e atualizar a variável `code`.
 
 #### 08 — Confirmar UUID diferente
 
-`POST /users/confirm`
+**POST** `{{ _.baseUrl }}/users/confirm`
+
+Body:
+
+```json
+{
+  "phone": "{{ _.phone }}",
+  "uuid": "{{ _.alternateUuid }}",
+  "code": "{{ _.code }}"
+}
+```
 
 **Retorno esperado:** `200 OK`
 
----
+### Variáveis que precisam ser preenchidas manualmente ao longo do fluxo
 
-### 02 — Usuários
-
-#### 09 — Listar usuários ativos
-
-`GET /users` → `200 OK`
-
-#### 10 — Listar usuários USER
-
-`GET /users?role=USER` → `200 OK`
-
-#### 11 — Listar usuários ADMIN
-
-`GET /users?role=ADMIN` → `200 OK`
-
-#### 12 — Listar usuários ASC
-
-`GET /users?sortDir=ASC` → `200 OK`
-
-#### 13 — Listar usuários DESC
-
-`GET /users?sortDir=DESC` → `200 OK`
-
-#### 14 — Buscar usuário por ID
-
-`GET /users/{id}` → `200 OK`
-
-#### 15 — Buscar usuário RAW por ID
-
-`GET /users/{id}/raw` → `200 OK`
-
-#### 16 — Atualizar perfil iOS
-
-`PUT /users/{id}` → `200 OK`
-
-#### 17 — Atualizar nome legado por PATCH
-
-`PATCH /users/{id}` → `200 OK` ou `204 No Content`
-
----
-
-### 03 — Participantes
-
-#### 18 — Criar participante
-
-`POST /participants` → `201 Created`
-
-> ⚠️ **Ação obrigatória:** salve o `id` retornado na variável `participantId`.
-
-#### 19 — Listar participantes
-
-`GET /participants` → `200 OK`
-
-#### 20 — Listar participantes DESC
-
-`GET /participants?sortDir=DESC` → `200 OK`
-
-#### 21 — Buscar participante por ID
-
-`GET /participants/{id}` → `200 OK`
-
-#### 22 — Atualizar participante
-
-`PATCH /participants/{id}` → `200 OK`
-
----
-
-### 04 — Eventos
-
-#### 23 — Criar evento
-
-`POST /events` → `201 Created`
-
-> ⚠️ **Ação obrigatória:** salve o `id` retornado na variável `eventId`.
-
-#### 24 — Listar eventos
-
-`GET /events` → `200 OK`
-
-#### 25 — Listar eventos com filtros
-
-`GET /events?name=java&status=SCHEDULED&sortBy=eventDate&direction=ASC` → `200 OK`
-
-#### 26 — Buscar evento por ID
-
-`GET /events/{id}` → `200 OK`
-
-#### 27 — Atualizar evento
-
-`PATCH /events/{id}` → `200 OK`
-
-#### 28 — Associar participante ao evento
-
-`POST /events/{eventId}/participants/{participantId}` → `200 OK`
-
-#### 29 — Listar participantes do evento
-
-`GET /events/{eventId}/participants` → `200 OK`
-
----
-
-### 05 — Apostas: consultas e criação
-
-#### 30 — Listar apostas
-
-`GET /bets` → `200 OK`
-
-#### 31 — Criar aposta padrão
-
-`POST /bets` → `201 Created`
-
-> ⚠️ **Ação obrigatória:** salve o `id` retornado na variável `betId`.
-
-#### 32 — Buscar aposta por ID
-
-`GET /bets/{id}` → `200 OK`
-
-#### 33 — Votar em atleta
-
-`PUT /bets/{id}/vote` → `200 OK`
-
----
-
-### 06 — Apostas: finalizar por confirmação dupla
-
-#### 34 — Criar aposta para finalizar
-
-`POST /bets` → `201 Created`
-
-> ⚠️ Salve o `id` na variável `betIdFinish`.
-
-#### 35 — Propor vencedor
-
-`PUT /bets/{id}/winner` → `200 OK`
-
-#### 36 — Confirmar vencedor atleta A
-
-`PUT /bets/{id}/confirm` → `200 OK`
-
-#### 37 — Confirmar vencedor atleta B
-
-`PUT /bets/{id}/confirm` → `200 OK`
-
-#### 38 — Buscar aposta finalizada
-
-`GET /bets/{id}` → `200 OK`
-
-```json
-{ "status": "finished" }
-```
-
----
-
-### 07 — Apostas: fluxos alternativos
-
-#### 39 — Criar aposta para rejeição
-
-`POST /bets` → `201 Created` — salve na variável `betIdReject`
-
-#### 40 — Propor vencedor para rejeição
-
-`PUT /bets/{id}/winner` → `200 OK`
-
-#### 41 — Rejeitar vencedor
-
-`PUT /bets/{id}/reject` → `200 OK` → `status: disputed`
-
-#### 42 — Criar aposta para cancelamento
-
-`POST /bets` → `201 Created` — salve na variável `betIdCancel`
-
-#### 43 — Cancelar aposta
-
-`PUT /bets/{id}/cancel` → `200 OK` → `status: canceled`
-
-#### 44 — Criar aposta resultado direto
-
-`POST /bets` → `201 Created` — salve na variável `betIdResult`
-
-#### 45 — Atualizar resultado direto
-
-`PUT /bets/{id}/result` → `200 OK` → `status: finished`
-
----
-
-### 08 — Cenários de erro iOS
-
-| # | Cenário | Retorno esperado |
-|---|---|---|
-| 46 | Confirmar código inválido | `400 Bad Request` |
-| 47 | Confirmar código inexistente | `404 Not Found` |
-| 48 | Login telefone sem `phone` | `400 Bad Request` |
-| 49 | Login telefone sem `uuid` | `400 Bad Request` |
-
----
-
-### 09 — ADMIN opcional
-
-> ⚠️ Os endpoints deste grupo utilizam a variável `adminToken`.
->
-> Antes de executar os itens 51 a 57, execute obrigatoriamente o item **50** e copie o JWT retornado para:
->
-> ```json
-> "adminToken": "JWT_RETORNADO_NO_LOGIN_ADMIN"
-> ```
-
-#### 50 — Login ADMIN e-mail + senha
-
-```http
-POST {{ _.baseUrl }}/users/login
-```
-
-Body:
-
-```json
-{
-  "email": "{{ _.adminEmail }}",
-  "password": "{{ _.adminPassword }}"
-}
-```
-
-Retorno esperado:
-
-```json
-{
-  "token": "jwt-admin",
-  "user": {
-    "id": 1,
-    "email": "admin@authserver.com",
-    "roles": ["ADMIN"]
-  }
-}
-```
-
-> ⚠️ Copiar o JWT retornado e colar na variável `adminToken`.
-
----
-
-#### 51 — Criar role
-
-```http
-POST {{ _.baseUrl }}/roles
-```
-
-Headers:
-
-```http
-Authorization: Bearer {{ _.adminToken }}
-Content-Type: application/json
-```
-
-Body:
-
-```json
-{
-  "name": "MODERATOR_TESTE_01",
-  "description": "Moderador de conteúdo"
-}
-```
-
-Retorno esperado: `201 Created` ou `200 OK`
-
-> Se a role já existir, altere o valor de `name`.
-
----
-
-#### 52 — Listar roles
-
-```http
-GET {{ _.baseUrl }}/roles
-```
-
-Headers:
-
-```http
-Authorization: Bearer {{ _.adminToken }}
-```
-
-Retorno esperado:
-
-```json
-[
-  { "id": 1, "name": "ADMIN" },
-  { "id": 2, "name": "USER" }
-]
-```
-
-Status: `200 OK`
-
----
-
-#### 53 — Adicionar role ADMIN ao usuário
-
-```http
-PUT {{ _.baseUrl }}/users/{{ _.userId }}/roles/ADMIN
-```
-
-Headers:
-
-```http
-Authorization: Bearer {{ _.adminToken }}
-```
-
-Exemplo: `PUT /users/3/roles/ADMIN`
-
-Retorno esperado: `204 No Content`
-
-> A variável `userId` precisa estar preenchida com um usuário existente.
-
----
-
-#### 54 — Remover participante do evento
-
-```http
-DELETE {{ _.baseUrl }}/events/{{ _.eventId }}/participants/{{ _.participantId }}
-```
-
-Headers:
-
-```http
-Authorization: Bearer {{ _.adminToken }}
-```
-
-Pré-requisitos:
-
-- Item **18** — Criar participante
-- Item **23** — Criar evento
-- Item **28** — Associar participante ao evento
-
-Variáveis obrigatórias: `eventId` e `participantId` preenchidos.
-
-Retorno esperado: `204 No Content`
-
----
-
-#### 55 — Remover evento
-
-```http
-DELETE {{ _.baseUrl }}/events/{{ _.eventId }}
-```
-
-Headers:
-
-```http
-Authorization: Bearer {{ _.adminToken }}
-```
-
-Variável obrigatória: `eventId` preenchido.
-
-Retorno esperado: `204 No Content`
-
----
-
-#### 56 — Remover participante
-
-```http
-DELETE {{ _.baseUrl }}/participants/{{ _.participantId }}
-```
-
-Headers:
-
-```http
-Authorization: Bearer {{ _.adminToken }}
-```
-
-Variável obrigatória: `participantId` preenchido.
-
-Retorno esperado: `204 No Content`
-
----
-
-#### 57 — Remover usuário
-
-```http
-DELETE {{ _.baseUrl }}/users/{{ _.userId }}
-```
-
-Headers:
-
-```http
-Authorization: Bearer {{ _.adminToken }}
-```
-
-Variável obrigatória: `userId` preenchido.
-
-Retorno esperado: `204 No Content`
-
----
-
-### 📌 Observações Importantes para o Insomnia
-
-#### Variáveis preenchidas manualmente durante os testes
-
-| Variável | Origem |
+| Variável | Obtida em |
 |---|---|
-| `token` | Item 02 ou 05 |
-| `adminToken` | Item 50 |
-| `userId` | Item 05 |
-| `participantId` | Item 18 |
-| `eventId` | Item 23 |
-| `betId` | Item 31 |
-| `betIdFinish` | Item 34 |
-| `betIdReject` | Item 39 |
-| `betIdCancel` | Item 42 |
-| `betIdResult` | Item 44 |
-
-#### Ordem recomendada de execução
-
-```text
-00 — Preparação sem erro
-01 — Fluxo iOS: telefone + UUID
-02 — Usuários
-03 — Participantes
-04 — Eventos
-05 — Apostas: consultas e criação
-06 — Apostas: finalizar por confirmação dupla
-07 — Apostas: fluxos alternativos
-08 — Cenários de erro iOS
-09 — ADMIN opcional
-```
-
----
-
-## 📋 Regras de Negócio
-### Usuários
-- **Login por telefone:** o número é normalizado (removendo caracteres não numéricos) antes de buscar/salvar.
-- **UUID único por dispositivo:** se o telefone existir mas com UUID diferente, um novo código é gerado.
-- **Código de confirmação:** 6 dígitos, válido por **10 minutos**, marcado como usado após consumo.
-- **Criação automática:** ao confirmar o código, se o telefone não estiver cadastrado, um novo usuário é criado automaticamente.
-- **E-mail único (legado):** não é possível cadastrar dois usuários com o mesmo e-mail.
-- **Senha (legado):** mínimo 8 caracteres, obrigatório conter letra, número e caractere especial (`@$!%*#?&`).
-- **Atualização (legado):** apenas o próprio usuário ou um ADMIN pode alterar o nome via `PATCH`.
-- **Remoção:** um ADMIN não pode ser deletado se for o único com essa role no sistema.
-### Roles
-- O nome da role é sempre convertido e armazenado em **maiúsculas**.
-- Roles duplicadas não são permitidas.
-- Somente ADMINs podem criar e listar roles.
-### Eventos
-- Um evento pode ter vários participantes (relação `1:N`).
-- Um participante pode ser associado a apenas um evento por vez.
-- Associar um participante já vinculado ao mesmo evento retorna `409 Conflict`.
-- Desassociar um participante não vinculado ao evento retorna `400 Bad Request`.
-- Buscar evento inexistente retorna `404 Not Found`.
-### Participantes
-- **E-mail único:** não é possível cadastrar dois participantes com o mesmo e-mail.
-- Um participante pode existir sem estar vinculado a nenhum evento.
-- Buscar participante inexistente retorna `404 Not Found`.
-### Inicialização automática (Bootstrapper)
-Ao subir a aplicação, são criados automaticamente:
-
-| Recurso | Valor padrão |
-|---|---|
-| Role | `USER` |
-| Role | `ADMIN` |
-| Usuário admin | `admin@authserver.com` / `admin` |
-> ⚠️ **Atenção:** altere as credenciais padrão antes de usar em produção.  
-> 💡 Todo novo usuário criado via `POST /users` recebe automaticamente a role `USER`.
-
----
-## 🔒 Regras de Segurança
-- Sessão **stateless** (sem cookies/sessão no servidor).
-- **CORS** liberado para todas as origens (configurar restrições em produção).
-- **CSRF** desabilitado.
-- Endpoints `GET`, `POST /users`, `POST /users/login`, `POST /users/confirm` e `PUT /users/{id}` são públicos.
-- Ações de criação e atualização (legado) requerem autenticação JWT.
-- Ações destrutivas (`DELETE`) requerem perfil **ADMIN**.
-
----
-## 📁 Estrutura do Projeto
-```
-src/main/kotlin/br/pucpr/authserver/
-├── AuthserverApplication.kt          # Entry point
-├── Bootstrapper.kt                   # Dados iniciais (roles e admin padrão)
-├── exceptions/                       # Exceções globais (400, 401, 403, 404)
-├── security/
-│   ├── Jwt.kt                        # Geração e validação de tokens JWT
-│   ├── JwtTokenFilter.kt             # Filtro de autenticação via JWT
-│   ├── SecurityConfig.kt             # Configuração do Spring Security
-│   └── UserToken.kt                  # Representação do usuário no token
-├── roles/
-│   ├── controllers/
-│   │   └── RoleController.kt         # Endpoints /roles
-│   ├── dtos/
-│   │   ├── requests/
-│   │   │   └── CreateRoleRequest.kt
-│   │   └── responses/
-│   │       └── RoleResponse.kt
-│   ├── entities/
-│   │   └── Role.kt                   # Entidade Role
-│   ├── repositories/
-│   │   └── RoleRepository.kt         # Repositório JPA
-│   └── services/
-│       └── RoleService.kt            # Regras de negócio de roles
-├── users/
-│   ├── controllers/
-│   │   └── UserController.kt         # Endpoints /users
-│   ├── dtos/
-│   │   ├── requests/
-│   │   │   ├── CreateUserRequest.kt
-│   │   │   ├── LoginRequest.kt       # Legado: email + password
-│   │   │   ├── PhoneLoginRequest.kt  # iOS: phone + uuid
-│   │   │   ├── PhoneConfirmRequest.kt# iOS: phone + uuid + code
-│   │   │   ├── UpdateUserRequest.kt  # Legado: name
-│   │   │   └── UpdateUserProfileRequest.kt # iOS: name + description
-│   │   └── responses/
-│   │       ├── LoginResponse.kt      # Legado: token + UserResponse
-│   │       ├── UserResponse.kt       # Legado: id, email, name, roles
-│   │       └── BackendUserResponse.kt# iOS: id, name, phone, uuid, active, description, createdAt
-│   ├── entities/
-│   │   ├── User.kt                   # Entidade User (tabela UserTable)
-│   │   └── ConfirmationCode.kt       # Entidade de código de confirmação (tabela ConfirmationCode)
-│   ├── enums/
-│   │   └── SortDir.kt                # Enum de direção de ordenação (ASC/DESC)
-│   ├── repositories/
-│   │   ├── UserRepository.kt         # Repositório JPA
-│   │   └── ConfirmationCodeRepository.kt # Repositório JPA de códigos
-│   └── services/
-│       ├── UserService.kt            # Regras de negócio de usuários
-│       ├── ConfirmationCodeService.kt# Geração e validação de códigos
-│       └── FakeSmsService.kt         # Simulação de envio de SMS via log
-├── events/
-│   ├── controllers/
-│   │   └── EventController.kt        # Endpoints /events e /events/{id}/participants
-│   ├── dtos/
-│   │   ├── requests/
-│   │   │   ├── CreateEventRequest.kt
-│   │   │   └── UpdateEventRequest.kt
-│   │   └── responses/
-│   │       └── EventResponse.kt
-│   ├── entities/
-│   │   └── Event.kt                  # Entidade Event — tabela `events` (1:N com Participant)
-│   ├── enums/
-│   │   └── EventStatus.kt            # Enum: SCHEDULED, CANCELLED, FINISHED
-│   ├── exceptions/
-│   │   └── EventNotFoundException.kt # Exceção 404 customizada
-│   ├── repositories/
-│   │   └── EventRepository.kt        # Repositório JPA com query de filtros dinâmicos
-│   └── services/
-│       └── EventService.kt           # Regras de negócio com logs
-└── participants/
-    ├── controllers/
-    │   └── ParticipantController.kt  # Endpoints /participants
-    ├── dtos/
-    │   ├── requests/
-    │   │   ├── CreateParticipantRequest.kt
-    │   │   └── UpdateParticipantRequest.kt
-    │   └── responses/
-    │       └── ParticipantResponse.kt
-    ├── entities/
-    │   └── Participant.kt            # Entidade Participant — tabela `participants` (N:1 com Event)
-    ├── exceptions/
-    │   ├── ParticipantNotFoundException.kt       # Exceção 404 customizada
-    │   ├── ParticipantAlreadyLinkedException.kt  # Exceção 409 customizada
-    │   └── ParticipantNotLinkedException.kt      # Exceção 400 customizada
-    ├── repositories/
-    │   └── ParticipantRepository.kt  # Repositório JPA
-    └── services/
-        └── ParticipantService.kt     # Regras de negócio com logs
-```
----
-## ⚙️ Configuração (`application.yaml`)
-```yaml
-server:
-  port: ${PORT:8080}   # Sem context-path — rotas acessadas diretamente em /
-spring:
-  datasource:
-    url: jdbc:h2:mem:db  # Banco em memória (perfil local) — dados perdidos ao reiniciar
-```
-> Para o perfil **dev** (AWS RDS / PostgreSQL), as variáveis de conexão são lidas de:  
-> `RDS_HOSTNAME`, `RDS_PORT`, `RDS_DB_NAME`, `RDS_USERNAME`, `RDS_PASSWORD`  
-> Para ambientes produtivos, substitua o H2 por um banco persistente e atualize as variáveis de conexão.
-
----
-## 📨 FakeSmsService — Simulação de envio de código
-Durante o desenvolvimento, o código de confirmação **não é enviado por SMS real**. Ele é impresso no log da aplicação:
-```
-=== [FakeSMS] Sending confirmation code to phone 11999999999: CODE = 482931 ===
-```
-Basta verificar o terminal ou o arquivo `logs/spring.log` para obter o código durante os testes.
-# rdv-wodbet-auth-server
+| `token` | 02 ou 05 |
+| `adminToken` | 50 |
+| `code` | log FakeSMS (03 e 07) |
+| `userId` | 05 |
+| `participantId` | 18 |
+| `eventId` | 23 |
+| `betId` | 31 |
+| `betIdFinish` | 34 |
+| `betIdReject` | 39 |
+| `betIdCancel` | 42 |
+| `betIdResult` | 44 |
+| `athleteAId` | usuário existente |
+| `athleteBId` | usuário existente |
