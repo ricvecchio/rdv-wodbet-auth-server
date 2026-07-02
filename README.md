@@ -3,7 +3,7 @@ Servidor de autenticação e autorização baseado em **JWT**, desenvolvido com 
 
 
 > **Autor:** Ricardo Del Vecchio   
-> **Apresentação Youtube:** https://youtu.be/WYS0-PJBDR8
+> **Apresentação Youtube:** https://youtu.be/ISIPWfMTb5U
 
 ---
 ## 🛠️ Tecnologias
